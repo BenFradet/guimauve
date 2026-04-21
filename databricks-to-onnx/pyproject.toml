@@ -7,7 +7,14 @@ authors = [
     { name = "benfradet", email = "benjamin.fradet@gmail.com" }
 ]
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "click>=8.3.2",
+    "databricks-sdk>=0.103.0",
+    "mlflow>=3.11.1",
+    "onnx>=1.21.0",
+    "onnxruntime>=1.24.4",
+    "torch>=2.11.0",
+]
 
 [project.scripts]
 databricks-to-onnx = "databricks_to_onnx:main"
