@@ -1,5 +1,8 @@
 {
   "venvPath": ".",
   "venv": ".venv",
-  "reportPrivateImportUsage": false
+  "reportPrivateImportUsage": false,
+  "executionEnvironments": [
+    { "root": "src" }
+  ]
 }
