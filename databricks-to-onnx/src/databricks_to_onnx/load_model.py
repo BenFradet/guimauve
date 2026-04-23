@@ -15,7 +15,8 @@ def load_model(model_uri: str) -> nn.Module:
     a torch.nn.module ready for inference
     """
     mlflow.set_registry_uri("databricks-uc")
-    model = mlflow.pytorch.load_model(model_uri)  # type: ignore[reportPrivateImportUsage]
+    model = mlflow.pytorch.load_model(model_uri)
+
     # evaluation mode as opposed to training mode
     model.eval()
     return model
