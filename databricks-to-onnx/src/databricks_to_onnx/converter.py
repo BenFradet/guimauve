@@ -5,9 +5,26 @@ import torch
 from databricks_to_onnx.input_tensor_schema import InputTensorSchema
 
 
+def load_model(model_path: str) -> torch.nn.Module:
+    """
+    Loads a pytorch model from a local file
+
+    Parameters:
+    model_path (str): path to a .pth file, e.g. "models/champion.pth"
+
+    Returns:
+    a torch.nn.Module ready for inference
+    """
+    model = torch.load(model_path)
+
+    # evaluation mode as opposed to training mode
+    model.eval()
+    return model
+
+
 def fetch_model(model_uri: str) -> torch.nn.Module:
     """
-    Loads a pytorch model from databricks
+    Fetches a pytorch model from databricks
     c.f. https://docs.databricks.com/aws/en/machine-learning/manage-model-lifecycle/
 
     Parameters:
