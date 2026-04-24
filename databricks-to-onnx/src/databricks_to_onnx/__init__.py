@@ -1,2 +1,1 @@
-def main() -> None:
-    print("Hello from databricks-to-onnx!")
+from databricks_to_onnx.cli import cli as cli

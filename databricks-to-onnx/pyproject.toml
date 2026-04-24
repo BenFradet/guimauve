@@ -15,7 +15,7 @@ dependencies = [
 ]
 
 [project.scripts]
-databricks-to-onnx = "databricks_to_onnx:main"
+databricks-to-onnx = "databricks_to_onnx:cli"
 
 [build-system]
 requires = ["uv_build>=0.11.7,<0.12.0"]

@@ -1,7 +1,6 @@
 import click
 
-from databricks_to_onnx.convert_model import convert_model
-from databricks_to_onnx.fetch_model import fetch_model
+from databricks_to_onnx.converter import convert_model, fetch_model
 
 
 @click.command()
@@ -12,6 +11,7 @@ from databricks_to_onnx.fetch_model import fetch_model
 )
 @click.option(
     "-i", "--input-tensor-schema",
+    "input_tensor_schemas",
     required=True,
     multiple=True,
     help='Input tensor schema as "name:dtype:dim1,dim2". Repeatable.',
@@ -21,7 +21,7 @@ from databricks_to_onnx.fetch_model import fetch_model
     required=True,
     help="Output path for the .onnx file.",
 )
-def main(model_uri: str, input_tensor_schemas: tuple[str, ...], output_path: str) -> None:
+def cli(model_uri: str, input_tensor_schemas: tuple[str, ...], output_path: str) -> None:
     click.echo(f"Loading model from: {model_uri}")
     pytorch_model = fetch_model(model_uri)
 
