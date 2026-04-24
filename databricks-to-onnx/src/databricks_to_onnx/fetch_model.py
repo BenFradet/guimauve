@@ -2,9 +2,9 @@ import mlflow
 import torch.nn as nn
 
 
-def load_model(model_uri: str) -> nn.Module:
+def fetch_model(model_uri: str) -> nn.Module:
     """
-    Loads a model from databricks
+    Loads a pytorch model from databricks
     c.f. https://docs.databricks.com/aws/en/machine-learning/manage-model-lifecycle/
 
     Parameters:
@@ -12,7 +12,7 @@ def load_model(model_uri: str) -> nn.Module:
     "models:/catalog.schema.model_name@champion"
 
     Returns:
-    a torch.nn.module ready for inference
+    a torch.nn.Module ready for inference
     """
     mlflow.set_registry_uri("databricks-uc")
     model = mlflow.pytorch.load_model(model_uri)
