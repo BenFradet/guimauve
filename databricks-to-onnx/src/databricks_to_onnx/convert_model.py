@@ -9,17 +9,32 @@ def convert_model(
     input_tensor_schemas: list[str],
     output_path: str,
 ) -> None:
+    """
+    Converts a pytorch model to onnx format and writes it to the filesystem
+    c.f.
+    - https://docs.pytorch.org/tutorials/beginner/onnx/export_simple_model_to_onnx_tutorial.html
+    - https://docs.pytorch.org/docs/stable/onnx_export.html#torch.onnx.export
+
+    Parameters:
+    model (torch.nn.Module): loaded pytorch model
+    input_tensor_schemas (list[str]): the schemas of the input tensors to the model in the format
+    'name:dtype:dim1,dim2'
+    output_path (str): where to store the onnx file
+    """
     inputs = {}
-    input_names = []
 
     for schema in input_tensor_schemas:
-        schema = InputTensorSchema.parse(schema)
-        inputs[schema.name] = torch.zeros(schema.shape, dtype=schema.dtype)
-        input_names.append(schema.name)
+        tensor_schema = InputTensorSchema.parse(schema)
+        inputs[tensor_schema.name] = torch.zeros(tensor_schema.shape, dtype=tensor_schema.dtype)
 
+    # pytorch model is dynamic while onnx' is static
+    # export runs the model with an input tensor to trace and capture every op
+    # hence the need for a correctly shaped dummy input
     dummy_input = tuple(inputs.values())
+    input_names = list(inputs.keys())
 
     torch.onnx.export(model, dummy_input, output_path, input_names=input_names)
 
+    # check whether the export was successful
     onnx_model = onnx.load(output_path)
     onnx.checker.check_model(onnx_model)
