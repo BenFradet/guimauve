@@ -7,7 +7,6 @@ from databricks_to_onnx.converter import convert_model, fetch_model, load_model
 @click.option(
     "-l",
     "--local",
-    required=True,
     is_flag=True,
     help="Whether to fetch the model from databricks or a local file",
 )
@@ -15,8 +14,8 @@ from databricks_to_onnx.converter import convert_model, fetch_model, load_model
     "-m",
     "--model-path",
     required=True,
-    help='''Unity Catalog model URI, e.g. "models:/catalog.schema.model_name@champion" or
-    local path, e.g. "path/to/model.pth"''',
+    help='''Unity Catalog model URI, e.g. "models:/catalog.schema.model_name@champion",
+    local path, e.g. "path/to/model.pth" or local directory, e.g. "path/to/champion/"''',
 )
 @click.option(
     "-i",

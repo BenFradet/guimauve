@@ -10,12 +10,12 @@ def load_model(model_path: str) -> torch.nn.Module:
     Loads a pytorch model from a local file
 
     Parameters:
-    model_path (str): path to a .pth file, e.g. "models/champion.pth"
+    model_path (str): path to a directory containing a .pth file, e.g. "model/"
 
     Returns:
     a torch.nn.Module ready for inference
     """
-    model = torch.load(model_path)
+    model = mlflow.pytorch.load_model(model_path)
 
     # evaluation mode as opposed to training mode
     model.eval()
