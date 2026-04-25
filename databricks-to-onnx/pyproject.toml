@@ -6,12 +6,12 @@ readme = "README.md"
 authors = [
     { name = "benfradet", email = "benjamin.fradet@gmail.com" }
 ]
-requires-python = ">=3.12"
+requires-python = ">=3.11"
 dependencies = [
     "click>=8.3.2",
-    "mlflow>=3.11.1",
-    "onnx>=1.21.0",
-    "torch>=2.11.0",
+    "mlflow>=2.21.3",
+    "onnx>=1.14.0,<1.17",
+    "torch>=2.1.0",
 ]
 
 [project.scripts]
