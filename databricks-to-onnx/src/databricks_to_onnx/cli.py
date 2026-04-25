@@ -1,21 +1,15 @@
 import click
 
-from databricks_to_onnx.converter import convert_model, fetch_model, load_model
+from databricks_to_onnx.converter import convert_model, load_model
 
 
 @click.command()
 @click.option(
-    "-l",
-    "--local",
-    is_flag=True,
-    help="Whether to fetch the model from databricks or a local file",
-)
-@click.option(
     "-m",
-    "--model-path",
+    "--model-location",
     required=True,
     help='''Unity Catalog model URI, e.g. "models:/catalog.schema.model_name@champion",
-    local path, e.g. "path/to/model.pth" or local directory, e.g. "path/to/champion/"''',
+    or local directory, e.g. "path/to/champion/"''',
 )
 @click.option(
     "-i",
@@ -32,13 +26,13 @@ from databricks_to_onnx.converter import convert_model, fetch_model, load_model
     help="Output path for the .onnx file.",
 )
 def cli(
-    model_path: str,
+    model_location: str,
     input_tensor_schemas: tuple[str, ...],
     output_path: str,
     local: bool,
 ) -> None:
-    click.echo(f"Loading model from: {model_path}")
-    pytorch_model = load_model(model_path) if local else fetch_model(model_path)
+    click.echo(f"Loading model from: {model_location}")
+    pytorch_model = load_model(model_location)
 
     click.echo("Exporting to ONNX")
     convert_model(pytorch_model, list(input_tensor_schemas), output_path)

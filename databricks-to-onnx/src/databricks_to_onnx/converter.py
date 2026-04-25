@@ -5,37 +5,22 @@ import torch
 from databricks_to_onnx.input_tensor_schema import InputTensorSchema
 
 
-def load_model(model_path: str) -> torch.nn.Module:
-    """
-    Loads a pytorch model from a local file
-
-    Parameters:
-    model_path (str): path to a directory containing a .pth file, e.g. "model/"
-
-    Returns:
-    a torch.nn.Module ready for inference
-    """
-    model = mlflow.pytorch.load_model(model_path)
-
-    # evaluation mode as opposed to training mode
-    model.eval()
-    return model
-
-
-def fetch_model(model_uri: str) -> torch.nn.Module:
+def load_model(model_location: str) -> torch.nn.Module:
     """
     Fetches a pytorch model from databricks
     c.f. https://docs.databricks.com/aws/en/machine-learning/manage-model-lifecycle/
+    or locally
 
     Parameters:
-    model_uri (str): databricks catalog model path, e.g.
-    "models:/catalog.schema.model_name@champion"
+    model_location (str): databricks catalog model uri, e.g.
+    "models:/catalog.schema.model_name@champion",
+    or path to a directory containing a .pth file, e.g. "model/"
 
     Returns:
     a torch.nn.Module ready for inference
     """
     mlflow.set_registry_uri("databricks-uc")
-    model = mlflow.pytorch.load_model(model_uri)
+    model = mlflow.pytorch.load_model(model_location)
 
     # evaluation mode as opposed to training mode
     model.eval()
