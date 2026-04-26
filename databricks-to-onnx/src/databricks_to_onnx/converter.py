@@ -22,6 +22,13 @@ def load_model(model_location: str) -> torch.nn.Module:
     mlflow.set_registry_uri("databricks-uc")
     model = mlflow.pytorch.load_model(model_location)
 
+    # check whether the entrypoint is just a "wrapper model"
+    if hasattr(model, 'model'):
+        model = model.model
+    # type narrowing so that the eval below doesn't give linting errors
+    if not isinstance(model, torch.nn.Module):
+      raise TypeError(f"Expected nn.Module, got {type(model)}")
+
     # evaluation mode as opposed to training mode
     model.eval()
     return model
