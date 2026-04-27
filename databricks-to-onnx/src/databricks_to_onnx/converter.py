@@ -27,7 +27,7 @@ def load_model(model_location: str) -> torch.nn.Module:
         model = model.model
     # type narrowing so that the eval below doesn't give linting errors
     if not isinstance(model, torch.nn.Module):
-      raise TypeError(f"Expected nn.Module, got {type(model)}")
+      raise TypeError(f"Expected torch.nn.Module, got {type(model)}")
 
     # evaluation mode as opposed to training mode
     model.eval()
