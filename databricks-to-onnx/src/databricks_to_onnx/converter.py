@@ -1,6 +1,7 @@
 import mlflow
 import onnx
 import torch
+from onnxsim import simplify
 
 from databricks_to_onnx.input_tensor_schema import InputTensorSchema
 
@@ -68,3 +69,10 @@ def convert_model(
     # check whether the export was successful
     onnx_model = onnx.load(output_path)
     onnx.checker.check_model(onnx_model)
+
+    # simplify the model
+    simplified, check = simplify(onnx_model)
+    assert check, "Simplified ONNX model could not be validated"
+    onnx.checker.check_model(simplified)
+    onnx.save(simplified, output_path)
+
