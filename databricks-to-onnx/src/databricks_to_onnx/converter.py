@@ -1,3 +1,5 @@
+import os
+
 import mlflow
 import onnx
 import torch
@@ -24,11 +26,11 @@ def load_model(model_location: str) -> torch.nn.Module:
     model = mlflow.pytorch.load_model(model_location)
 
     # check whether the entrypoint is just a "wrapper model"
-    if hasattr(model, 'model'):
+    if hasattr(model, "model"):
         model = model.model
     # type narrowing so that the eval below doesn't give linting errors
     if not isinstance(model, torch.nn.Module):
-      raise TypeError(f"Expected torch.nn.Module, got {type(model)}")
+        raise TypeError(f"Expected torch.nn.Module, got {type(model)}")
 
     # evaluation mode as opposed to training mode
     model.eval()
@@ -38,7 +40,7 @@ def load_model(model_location: str) -> torch.nn.Module:
 def convert_model(
     model: torch.nn.Module,
     input_tensor_schemas: list[str],
-    output_path: str,
+    output_dir: str,
 ) -> None:
     """
     Converts a pytorch model to onnx format and writes it to the filesystem
@@ -50,7 +52,7 @@ def convert_model(
     model (torch.nn.Module): loaded pytorch model
     input_tensor_schemas (list[str]): the schemas of the input tensors to the model in the format
     'name:dtype:dim1,dim2'
-    output_path (str): where to store the onnx file
+    output_dir (str): where to store the onnx file
     """
     inputs = {}
 
@@ -64,6 +66,7 @@ def convert_model(
     dummy_input = tuple(inputs.values())
     input_names = list(inputs.keys())
 
+    output_path = os.path.join(output_dir, "model.onnx")
     torch.onnx.export(model, dummy_input, output_path, input_names=input_names)
 
     # check whether the export was successful
@@ -75,4 +78,3 @@ def convert_model(
     assert check, "Simplified ONNX model could not be validated"
     onnx.checker.check_model(simplified)
     onnx.save(simplified, output_path)
-
