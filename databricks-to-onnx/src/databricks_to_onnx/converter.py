@@ -25,13 +25,6 @@ def load_model(model_location: str) -> torch.nn.Module:
     mlflow.set_registry_uri("databricks-uc")
     model = mlflow.pytorch.load_model(model_location)
 
-    # check whether the entrypoint is just a "wrapper model"
-    if hasattr(model, "model"):
-        model = model.model
-    # type narrowing so that the eval below doesn't give linting errors
-    if not isinstance(model, torch.nn.Module):
-        raise TypeError(f"Expected torch.nn.Module, got {type(model)}")
-
     # evaluation mode as opposed to training mode
     model.eval()
     return model
@@ -55,6 +48,16 @@ def convert_model(
     output_dir (str): where to store the onnx file
     """
     inputs = {}
+
+    # check whether the entrypoint is just a "wrapper model"
+    if hasattr(model, "model"):
+        inner = model.model
+        # type narrowing so that the eval below doesn't give linting errors
+        if not isinstance(inner, torch.nn.Module):
+            raise TypeError(f"Expected torch.nn.Module, got {type(model)}")
+        model = inner
+    # evaluation mode as opposed to training mode
+    model.eval()
 
     for schema in input_tensor_schemas:
         tensor_schema = InputTensorSchema.parse(schema)
