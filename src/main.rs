@@ -1,6 +1,7 @@
 pub mod model {
     include!(concat!(env!("OUT_DIR"), "/model/model.rs"));
 }
+pub mod plugin;
 
 use burn::backend::{Flex, flex::FlexDevice};
 use burn::tensor::{Int, Tensor};
