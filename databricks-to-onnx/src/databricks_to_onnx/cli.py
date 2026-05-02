@@ -1,3 +1,5 @@
+import os
+
 import click
 
 from databricks_to_onnx.converter import convert_model, load_model
@@ -54,4 +56,5 @@ def cli(
     click.echo("Exporting to ONNX")
     convert_model(pytorch_model, list(input_tensor_schemas), output_dir)
 
-    click.echo(f"Done, wrote output to {output_dir}/model.onnx")
+    output_path = os.path.join(output_dir, "model.onnx")
+    click.echo(f"Done, wrote output to {output_path}")
