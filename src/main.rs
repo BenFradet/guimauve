@@ -1,13 +1,25 @@
 pub mod model {
     include!(concat!(env!("OUT_DIR"), "/model/model.rs"));
 }
-pub mod plugin;
 
+use axum::{Router, routing::get};
 use burn::backend::{Flex, flex::FlexDevice};
 use burn::tensor::{Int, Tensor};
 use model::Model;
+use tokio::net::TcpListener;
 
-fn main() {
+#[tokio::main]
+async fn main() {
+    tracing_subscriber::fmt::init();
+
+    let app = Router::new().route("/infer", get(infer));
+
+    let listener = TcpListener::bind("0.0.0.0:3000").await.unwrap();
+    tracing::debug!("listening on {}", listener.local_addr().unwrap());
+    let _ = axum::serve(listener, app).await;
+}
+
+async fn infer() {
     let device = FlexDevice;
 
     let model: Model<Flex> = Model::default();
