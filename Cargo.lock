@@ -2635,6 +2635,11 @@ dependencies = [
 [[package]]
 name = "example"
 version = "0.1.0"
+dependencies = [
+ "burn",
+ "burn-onnx",
+ "burn-store",
+]
 
 [[package]]
 name = "exr"
@@ -4261,6 +4266,11 @@ dependencies = [
 [[package]]
 name = "my-model"
 version = "0.1.0"
+dependencies = [
+ "burn",
+ "burn-onnx",
+ "burn-store",
+]
 
 [[package]]
 name = "naga"
