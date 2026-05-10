@@ -6,6 +6,7 @@ edition = "2024"
 [dependencies]
 burn = { version = "0.21.0", features = ["flex"] }
 burn-store = { version = "0.21.0" }
+plugin = { path = "../plugin" }
 
 [build-dependencies]
 burn-onnx = "0.21.0"

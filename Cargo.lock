@@ -2639,6 +2639,7 @@ dependencies = [
  "burn",
  "burn-onnx",
  "burn-store",
+ "plugin",
 ]
 
 [[package]]
@@ -4270,6 +4271,7 @@ dependencies = [
  "burn",
  "burn-onnx",
  "burn-store",
+ "plugin",
 ]
 
 [[package]]
