@@ -2636,10 +2636,12 @@ dependencies = [
 name = "example"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "burn",
  "burn-onnx",
  "burn-store",
  "plugin",
+ "serde_json",
 ]
 
 [[package]]
@@ -4268,10 +4270,12 @@ dependencies = [
 name = "my-model"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "burn",
  "burn-onnx",
  "burn-store",
  "plugin",
+ "serde_json",
 ]
 
 [[package]]
