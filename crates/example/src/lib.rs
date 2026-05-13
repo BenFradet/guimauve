@@ -1,28 +1,55 @@
 use std::{collections::HashMap, fs};
 
 use anyhow::Result;
+use burn::backend::{Flex, flex::FlexDevice};
+use burn::tensor::{Int, Float, Tensor};
 use plugin::model_plugin::ModelPlugin;
 
 pub mod model {
     include!(concat!(env!("OUT_DIR"), "/model/model.rs"));
 }
 
-type IdMapEntry = (i64, i64);
+type IdMapEntry = (Vec<i64>, i64, i64);
 type IdMap = HashMap<String, IdMapEntry>;
 
-fn parse_map(location: &str) -> Result<IdMap> {
-    let content = fs::read_to_string(location)?;
-    let id_map: IdMap = serde_json::from_str(&content)?;
-    Ok(id_map)
+struct OnnxExamplePlugin {
+    model: model::Model<Flex>,
+    map1: IdMap,
+    map2: IdMap,
+    device: FlexDevice,
 }
 
-pub struct OnnxExample;
-impl ModelPlugin for OnnxExample {
-    type Error = bool;
-    type Request = bool;
-    type Response = bool;
-    type ModelInput = bool;
-    type ModelOutput = bool;
+struct OnnxExampleRequest {
+    seed: String,
+    fs: Vec<(String, i64, i64)>,
+    cs: Vec<String>,
+}
+
+struct OnnxExampleResponse {
+    ss: Vec<(String, f32)>,
+}
+
+struct OnnxExampleModelInput {
+    ss: Tensor<Flex, 3, Int>,
+    ass: Tensor<Flex, 2, Int>,
+    gs: Tensor<Flex, 2, Int>,
+    sts: Tensor<Flex, 3, Int>,
+    sas: Tensor<Flex, 2, Int>,
+    sgs: Tensor<Flex, 2, Int>,
+    fts: Tensor<Flex, 2, Int>,
+    cts: Tensor<Flex, 2, Int>,
+}
+
+struct OnnxExampleModelOutput {
+    pub es: Tensor<Flex, 2, Float>,
+}
+
+impl ModelPlugin for OnnxExamplePlugin {
+    type Error = anyhow::Error;
+    type Request = OnnxExampleRequest;
+    type Response = OnnxExampleResponse;
+    type ModelInput = OnnxExampleModelInput;
+    type ModelOutput = OnnxExampleModelOutput;
 
     fn pre(&self, req: Self::Request) -> Result<Self::ModelInput, Self::Error> {
         todo!()
@@ -37,3 +64,8 @@ impl ModelPlugin for OnnxExample {
     }
 }
 
+fn parse_map(location: &str) -> Result<IdMap> {
+    let content = fs::read_to_string(location)?;
+    let id_map: IdMap = serde_json::from_str(&content)?;
+    Ok(id_map)
+}
