@@ -1,6 +1,9 @@
+use serde::{Serialize, de::DeserializeOwned};
+
 pub trait ModelPlugin {
-    type Request;
-    type Response;
+    // c.f. https://serde.rs/lifetimes.html#trait-bounds
+    type Request: DeserializeOwned;
+    type Response: Serialize;
     type ModelInput;
     type ModelOutput;
     type Error;

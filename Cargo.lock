@@ -2641,6 +2641,7 @@ dependencies = [
  "burn-onnx",
  "burn-store",
  "plugin",
+ "serde",
  "serde_json",
 ]
 
@@ -4275,6 +4276,7 @@ dependencies = [
  "burn-onnx",
  "burn-store",
  "plugin",
+ "serde",
  "serde_json",
 ]
 
@@ -4949,6 +4951,9 @@ checksum = "b4596b6d070b27117e987119b4dac604f3c58cfb0b191112e24771b2faeac1a6"
 [[package]]
 name = "plugin"
 version = "0.1.0"
+dependencies = [
+ "serde",
+]
 
 [[package]]
 name = "png"
