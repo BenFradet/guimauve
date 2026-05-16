@@ -1,4 +1,3 @@
-import torch
 import torch.nn as nn
 
 
@@ -7,13 +6,12 @@ class MultiHeadSelfAttention(nn.Module):
 
     def __init__(
         self,
-        embed_size,
-        num_heads,
-        key_dim=64,
-        val_dim=None,
-        dropout=0.0,
-        use_bias=True,
-        **kwargs,
+        embed_size: int,
+        num_heads: int,
+        key_dim: int = 64,
+        val_dim: int | None = None,
+        dropout: float = 0.0,
+        bias: bool = True,
     ) -> None:
         super(MultiHeadSelfAttention, self).__init__()
         self.embed_size = embed_size
@@ -22,26 +20,11 @@ class MultiHeadSelfAttention(nn.Module):
         self.val_dim = val_dim
         self.key_output_dim = self.key_dim * num_heads
         self.val_output_dim = (
-            self.val_dim * num_heads if val_dim else self.key_output_dim
+            self.val_dim * num_heads if self.val_dim else self.key_output_dim
         )
         self.dropout = nn.Dropout(dropout)
-        self.use_bias = use_bias
 
-        self.weight_query = nn.Parameter(
-            torch.empty((self.embed_size, self.key_output_dim))
-        )
-        self.weight_key = nn.Parameter(
-            torch.empty((self.embed_size, self.key_output_dim))
-        )
-        self.weight_value = nn.Parameter(
-            torch.empty((self.embed_size, self.val_output_dim))
-        )
-        self.weight_output = nn.Parameter(
-            torch.empty((self.val_output_dim, self.embed_size))
-        )
-
-        if use_bias:
-            self.bias_query = nn.Parameter(torch.empty(self.key_output_dim))
-            self.bias_key = nn.Parameter(torch.empty(self.key_output_dim))
-            self.bias_value = nn.Parameter(torch.empty(self.val_output_dim))
-            self.bias_output = nn.Parameter(torch.empty(self.embed_size))
+        self.query = nn.Linear(self.embed_size, self.key_output_dim, bias=bias)
+        self.key = nn.Linear(self.embed_size, self.key_output_dim, bias=bias)
+        self.value = nn.Linear(self.embed_size, self.val_output_dim, bias=bias)
+        self.output = nn.Linear(self.val_output_dim, self.embed_size, bias=bias)
