@@ -5,8 +5,25 @@ import torch.nn.functional as F
 
 class MultiHeadSelfAttention(nn.Module):
     """
-    attention: a(Q, {K: V}) = σ(Q @ K^T / sqrt(dk)) @ V
-    multi-head: mha(Q, {K; V}) = concat(h_i)W^o, h_i = a(Q @ W^Q_i, {K @ W^K_i: V @ W^V_i})
+    self-attention:
+    fa(Q, {K: V}) = σ(Q @ K^T / sqrt(dk)) @ V
+    - linear projection: each input word is converted into q, k, v vectors using learned W
+    - Q-K interaction: the q vector of a word is multiplied with the k vectors of all words to
+    compute scores, indicating how much focus to give to each word
+    - scaling: scores / sqrt(d_k), d_k = d_model / num_heads (hyper params)
+    - softmax normalization: turn scaled scores into probabilities
+    - weighted sum of values: probabilities are multiplied with the v vectors to assignm
+    importance to each word
+    - output: weighted value vectors are summed to produce the final representation for each word
+
+    multi-head:
+    fmha(Q, {K; V}) = concat(h_i)W^o, h_i = fa(Q @ W^Q_i, {K @ W^K_i: V @ W^V_i})
+    - input embeddings: each word in the sentence is converted into an embedding vector
+    - multiple attention heads: multiple heads each with its own W^Q, W^K, W^V
+    - linear projections: for each head, input embeddings are transformed into q, k and v vectors
+    - self-attention: each head applies self-attention to compute contextual representations
+    - concat: outputs from all attention heads are concatenated into a single matrix
+    - linear transformation: concatenated output is multiplied by W^O
 
     c.f.
     - attention is all you need https://arxiv.org/pdf/1706.03762
@@ -85,7 +102,7 @@ class MultiHeadSelfAttention(nn.Module):
 
         # [num_heads, B, T, S]
         # attention scaling: sqrt(key_dim)
-        weights = torch.matmul(queries, keys.transpose(-2, -1)) / (self.key_dim ** 0.5)
+        weights = torch.matmul(queries, keys.transpose(-2, -1)) / (self.key_dim**0.5)
         if mask is not None:
             weights += (1.0 - mask.type(weights.dtype)) * -1e9
 
@@ -118,8 +135,8 @@ class MultiHeadSelfAttention(nn.Module):
         Computes an attention mask, masks are combined using logical AND
 
         Args:
-            query: Tensor of shape [B, T]
-            value: Tensor of shape [B, S]
+            query: Tensor of shape [B, T, embed_size]
+            value: Tensor of shape [B, S, embed_size]
             query_mask: Tensor of shape [B, T]
             key_mask: Tensor of shape [B, S]
             value_mask: Tensor of shape [B, S]
@@ -154,8 +171,8 @@ class MultiHeadSelfAttention(nn.Module):
         Computes a causal mask for masked self-attention layers
 
         Args:
-            query: Tensor of shape [B, T]
-            value: Tensor of shape [B, S], optional defaults to query
+            query: Tensor of shape [B, T, embed_size]
+            value: Tensor of shape [B, S, embed_size], optional defaults to query
         Returns:
             a lower triangular Tensor with shape [1, T, S], e.g.
             ```
