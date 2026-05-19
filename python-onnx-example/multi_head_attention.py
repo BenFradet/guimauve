@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-class MultiHeadSelfAttention(nn.Module):
+class MultiHeadAttention(nn.Module):
     """
     self-attention:
     fa(Q, {K: V}) = σ(Q @ K^T / sqrt(dk)) @ V
@@ -39,7 +39,7 @@ class MultiHeadSelfAttention(nn.Module):
         dropout: float = 0.0,
         use_bias: bool = True,
     ) -> None:
-        super(MultiHeadSelfAttention, self).__init__()
+        super(MultiHeadAttention, self).__init__()
         self.embed_size = embed_size
         self.num_heads = num_heads
         self.key_dim = key_dim
