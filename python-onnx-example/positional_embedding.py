@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import math
 
 
 class PositionalEmbedding(nn.Module):
@@ -8,6 +9,8 @@ class PositionalEmbedding(nn.Module):
     - attention is all you need https://arxiv.org/pdf/1706.03762
     - https://happystrongcoder.substack.com/p/transformer-with-code-part-i-positional
     """
+
+    pos_encoding: torch.Tensor
 
     def __init__(
         self,
@@ -21,7 +24,18 @@ class PositionalEmbedding(nn.Module):
         self.token_embedding = nn.Embedding(num_embeddings, embedding_dim)
         self.len = length
         self.embedding_dim = embedding_dim
-        self.register_buffer('pos_encoding', self._positional_encoding(n))
+        self.embedding_dim_sqrt = math.sqrt(embedding_dim)
+        self.register_buffer("pos_encoding", self._positional_encoding(n))
+
+    def forward(
+        self,
+        input: torch.Tensor,
+    ) -> torch.Tensor:
+        seq_len = input.shape[1]
+        embedded_tokens = self.token_embedding(input)
+        scaled_tokens = embedded_tokens * self.embedding_dim_sqrt
+        encoded_tokens = scaled_tokens + self.pos_encoding[None, :seq_len, :]
+        return encoded_tokens
 
     def _positional_encoding(self, n: int = 10000) -> torch.Tensor:
         half_embedding_dim = self.embedding_dim // 2
