@@ -39,6 +39,15 @@ class MultiHeadAttention(nn.Module):
         dropout: float = 0.0,
         use_bias: bool = True,
     ) -> None:
+        """
+        Args:
+            embed_size: dimension of the input embeddings
+            num_heads: number of parallel attention heads
+            key_dim: dimension of each head's key and query projections
+            val_dim: dimension of each head's value projection, defaults to key_dim
+            dropout: dropout probability applied to attention scores
+            use_bias: whether to use bias in the linear projections
+        """
         super(MultiHeadAttention, self).__init__()
         self.embed_size = embed_size
         self.num_heads = num_heads
