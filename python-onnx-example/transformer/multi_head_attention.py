@@ -69,9 +69,9 @@ class MultiHeadAttention(nn.Module):
         query: torch.Tensor,
         key: torch.Tensor,
         value: torch.Tensor,
-        query_mask: torch.Tensor | None,
-        key_mask: torch.Tensor | None,
-        value_mask: torch.Tensor | None,
+        query_mask: torch.Tensor | None = None,
+        key_mask: torch.Tensor | None = None,
+        value_mask: torch.Tensor | None = None,
         use_causal_mask: bool = False,
     ) -> torch.Tensor:
         """
