@@ -9,7 +9,6 @@ class ResidualNorm(nn.Module):
 
     c.f.
     - attention is all you need https://arxiv.org/pdf/1706.03762
-    - https://happystrongcoder.substack.com/p/transformer-with-code-part-ii-encoder
     """
 
     def __init__(
