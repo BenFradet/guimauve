@@ -48,3 +48,44 @@ class Decoder(nn.Module):
 
         self.ffn = FeedForward(model_dim=model_dim, feed_forward_dim=feed_forward_dim)
         self.ffn_residual_norm = ResidualNorm(dim=model_dim, dropout=dropout)
+
+    def forward(
+        self, input: torch.Tensor, encoder_output: torch.Tensor
+    ) -> torch.Tensor:
+        """
+        Args:
+            input: Tensor with shape [batch_size, target_len, embedding_size]
+            encoder_output: Tensor with shape [batch_size, source_len, embedding_size], used for key
+            and value of cross mha
+        Returns:
+            Tensor after masked mha, cross mha and ffn with shape
+            [batch_size, token_len, embedding_size]
+        """
+        masked_mha = self.masked_mha(
+            query=input,
+            key=input,
+            value=input,
+            use_causal_mask=True,
+        )
+        masked_mha_residual_norm = self.masked_mha_residual_norm(
+            sublayer_input=input,
+            sublayer_output=masked_mha,
+        )
+
+        cross_mha = self.cross_mha(
+            query=masked_mha_residual_norm,
+            key=encoder_output,
+            value=encoder_output,
+        )
+        cross_mha_residual_norm = self.cross_mha_residual_norm(
+            sublayer_input=masked_mha_residual_norm,
+            sublayer_output=cross_mha,
+        )
+
+        ffn = self.ffn(cross_mha_residual_norm)
+        ffn_residual_norm = self.ffn_residual_norm(
+            sublayer_input=cross_mha_residual_norm,
+            sublayer_output=ffn,
+        )
+
+        return ffn_residual_norm
