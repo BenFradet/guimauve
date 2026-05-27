@@ -34,27 +34,51 @@ class Transformer(nn.Module):
             seq_length=seq_length,
         )
 
-        self.encoders = nn.ModuleList([
-            Encoder(
-                model_dim=model_dim,
-                feed_forward_dim=feed_forward_dim,
-                num_heads=num_heads,
-                dropout=dropout,
-            )
-            for _ in range(num_layers)
-        ])
         self.encoder_dropout = nn.Dropout(dropout)
-
-        self.decoders = nn.ModuleList([
-            Decoder(
-                model_dim=model_dim,
-                feed_forward_dim=feed_forward_dim,
-                num_heads=num_heads,
-                dropout=dropout,
-            )
-            for _ in range(num_layers)
-        ])
         self.decoder_dropout = nn.Dropout(dropout)
 
-        # converted decoder output into next token probabilities (to be used with softmax)
+        self.encoders = nn.ModuleList(
+            [
+                Encoder(
+                    model_dim=model_dim,
+                    feed_forward_dim=feed_forward_dim,
+                    num_heads=num_heads,
+                    dropout=dropout,
+                )
+                for _ in range(num_layers)
+            ]
+        )
+
+        self.decoders = nn.ModuleList(
+            [
+                Decoder(
+                    model_dim=model_dim,
+                    feed_forward_dim=feed_forward_dim,
+                    num_heads=num_heads,
+                    dropout=dropout,
+                )
+                for _ in range(num_layers)
+            ]
+        )
+
+        # converts decoder output into next token logits
         self.final_linear = nn.Linear(model_dim, target_vocab_size)
+
+    def forward(self, source: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+        source_embedding = self.source_embedding(source)
+        source_embedding = self.encoder_dropout(source_embedding)
+
+        target_embedding = self.target_embedding(target)
+        target_embedding = self.decoder_dropout(target_embedding)
+
+        for encoder in self.encoders:
+            source_embedding = encoder(source_embedding)
+
+        for decoder in self.decoders:
+            target_embedding = decoder(target_embedding, source_embedding)
+
+        logits = self.final_linear(target_embedding)
+        # softmax will be dealt with at inference or directly in the loss
+        # probs = F.softmax(logits, dim=-1)
+
+        return logits
