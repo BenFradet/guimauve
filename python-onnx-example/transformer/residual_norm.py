@@ -6,9 +6,6 @@ class ResidualNorm(nn.Module):
     """
     Handles drop out, residual connection and normalization after each sublayer
     LayerNorm(x + Sublayer(x))
-
-    c.f.
-    - attention is all you need https://arxiv.org/pdf/1706.03762
     """
 
     def __init__(

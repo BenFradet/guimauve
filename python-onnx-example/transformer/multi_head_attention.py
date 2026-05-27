@@ -24,10 +24,6 @@ class MultiHeadAttention(nn.Module):
     - self-attention: each head applies self-attention to compute contextual representations
     - concat: outputs from all attention heads are concatenated into a single matrix
     - linear transformation: concatenated output is multiplied by W^O
-
-    c.f.
-    - attention is all you need https://arxiv.org/pdf/1706.03762
-    - https://happystrongcoder.substack.com/p/transformer-with-code-part-i-positional
     """
 
     def __init__(

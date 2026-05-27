@@ -31,10 +31,6 @@ class PositionalEmbedding(nn.Module):
     [cos(pos + k)] = [-sin(k)  cos(k)] [cos(pos)]
 
     also, dot product of two positional encodings only depends on the distance k and it's symmetric
-
-    c.f.
-    - attention is all you need https://arxiv.org/pdf/1706.03762
-    - https://happystrongcoder.substack.com/p/transformer-with-code-part-i-positional
     """
 
     pos_encoding: torch.Tensor

@@ -6,10 +6,6 @@ class FeedForward(nn.Module):
     """
     Fully connected feed forward network
     FFN(x) = max(0, xW1 + b1) W2 + b2 (relu)
-
-    c.f.
-    - attention is all you need https://arxiv.org/pdf/1706.03762
-    - https://happystrongcoder.substack.com/p/transformer-with-code-part-ii-encoder
     """
 
     def __init__(
