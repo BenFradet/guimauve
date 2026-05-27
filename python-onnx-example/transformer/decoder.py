@@ -8,7 +8,7 @@ from transformer.residual_norm import ResidualNorm
 
 class Decoder(nn.Module):
     """
-    decoder is: masked mha -> residual norm -> cross mha -> residual norm -> ffn -> residual norm
+    decoder: masked mha -> residual norm -> cross mha -> residual norm -> ffn -> residual norm
 
     c.f.
     - attention is all you need https://arxiv.org/pdf/1706.03762

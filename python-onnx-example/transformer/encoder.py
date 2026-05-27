@@ -8,7 +8,7 @@ from transformer.residual_norm import ResidualNorm
 
 class Encoder(nn.Module):
     """
-    encoder is: mha -> residual norm -> ffn -> residual norm
+    encoder: mha -> residual norm -> ffn -> residual norm
 
     c.f.
     - attention is all you need https://arxiv.org/pdf/1706.03762

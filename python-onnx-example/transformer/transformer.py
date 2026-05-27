@@ -7,6 +7,14 @@ from transformer.positional_embedding import PositionalEmbedding
 
 
 class Transformer(nn.Module):
+    """
+    transformer: positional embeddings -> encoder and decoder stack -> final linear layer
+
+    c.f.
+    - attention is all you need https://arxiv.org/pdf/1706.03762
+    - https://happystrongcoder.substack.com/p/transformer-with-code-part-ii-encoder
+    """
+
     def __init__(
         self,
         source_vocab_size: int,
@@ -18,6 +26,17 @@ class Transformer(nn.Module):
         num_heads: int = 8,
         dropout: float = 0.1,
     ) -> None:
+        """
+        Args:
+            source_vocab_size: vocabulary size of the source language
+            target_vocab_size: vocabulary size of the target language
+            seq_length: maximum sequence length for positional encoding
+            num_layers: number of stacked encoder and decoder layers
+            model_dim: dimension of the model, must be divisible by num_heads
+            feed_forward_dim: inner dimension of the feed-forward sublayers
+            num_heads: number of parallel attention heads
+            dropout: dropout probability applied after embeddings and sublayers
+        """
         super(Transformer, self).__init__()
         assert model_dim % num_heads == 0, (
             "model_dim needs to be divisible by num_heads"
@@ -65,6 +84,15 @@ class Transformer(nn.Module):
         self.final_linear = nn.Linear(model_dim, target_vocab_size)
 
     def forward(self, source: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+        """
+        Args:
+            source: source token indices with shape [batch_size, source_len]
+            target: target token indices with shape [batch_size, target_len]
+
+        Returns:
+            Tensor with logits over target vocabulary with shape
+            [batch_size, target_len, target_vocab_size]
+        """
         source_embedding = self.source_embedding(source)
         source_embedding = self.encoder_dropout(source_embedding)
 
