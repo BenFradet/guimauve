@@ -7,7 +7,7 @@ from tokenizers.trainers import BpeTrainer
 class TextTokenizer:
     """
     byte-pair encoding subword tokenizer with padding and truncation
-    must call train before encode/decode.
+    must call train before encode/decode
     c.f. https://github.com/huggingface/tokenizers
     """
 
@@ -25,7 +25,7 @@ class TextTokenizer:
 
     def train(self, files: list[str]) -> None:
         """
-        train the tokenizer on the given text files
+        trains the tokenizer on the given text files
 
         Args:
             files: paths to plain text files, one sentence per line
@@ -55,3 +55,29 @@ class TextTokenizer:
             decoded string
         """
         return self.tokenizer.decode(encoding)
+
+    def save(self, path: str) -> None:
+        """
+        saves a trained tokenizer to disk
+
+        Args:
+            path: file where the serialized tokenizer will be saved
+        """
+        self.tokenizer.save(path)
+
+    @classmethod
+    def from_file(cls, path: str, max_len: int = 128) -> "TextTokenizer":
+        """
+        creates a TextTokenizer from a file location on disk
+        
+        Args:
+            path: file where the serialized tokenizer is saved
+            max_len: sequence length for padding and truncation
+
+        Returns:
+            A trained TextTokenizer loaded from disk
+        """
+        tokenizer = Tokenizer.from_file(path)
+        instance = cls(vocab_size=tokenizer.get_vocab_size(), max_len=max_len)
+        instance.tokenizer = tokenizer
+        return instance
