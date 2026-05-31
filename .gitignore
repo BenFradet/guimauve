@@ -1,4 +1,7 @@
 /target
+
+__pycache__
+
 models/*
 datasets/*
 crates/my-model/*
