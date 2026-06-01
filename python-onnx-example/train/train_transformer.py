@@ -2,6 +2,7 @@ import argparse
 
 from torch.utils.data import DataLoader
 
+from transformer.transformer import Transformer
 from util.text_tokenizer import TextTokenizer
 from util.translation_dataset import TranslationDataset
 
@@ -44,3 +45,10 @@ if __name__ == "__main__":
         tgt_tokenizer=pt_tokenizer,
     )
     test_dl = DataLoader(test_ds, batch_size=64, shuffle=True)
+
+    # tokenizers params might need tuning
+    transformer = Transformer(
+        source_vocab_size=en_tokenizer.vocab_size,
+        target_vocab_size=pt_tokenizer.vocab_size,
+        seq_length=en_tokenizer.max_len,
+    )

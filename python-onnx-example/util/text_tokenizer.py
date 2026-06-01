@@ -18,6 +18,7 @@ class TextTokenizer:
             max_len: sequence length for padding and truncation
         """
         self.vocab_size = vocab_size
+        self.max_len = max_len
         self.tokenizer = Tokenizer(BPE())
         self.tokenizer.pre_tokenizer = Whitespace()
         self.tokenizer.enable_padding(length=max_len, pad_id=0)
