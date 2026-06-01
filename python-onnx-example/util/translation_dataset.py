@@ -11,7 +11,14 @@ class TranslationDataset(Dataset):
         tgt_file: str,
         src_tokenizer: TextTokenizer,
         tgt_tokenizer: TextTokenizer,
-    ):
+    ) -> None:
+        """
+        Args:
+            src_file: location of the file in the source language
+            tgt_file: location of the file in the target language
+            src_tokenizer: tokenizer to use for the source language
+            tgt_tokenizer: tokenizer to use for the target language
+        """
         with open(src_file) as f:
             src_lines = f.readlines()
         with open(tgt_file) as f:
