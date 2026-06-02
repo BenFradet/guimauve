@@ -1,7 +1,9 @@
 import argparse
+import os
 
 import torch.optim as optim
 from torch.utils.data import DataLoader
+from torch.utils.tensorboard import SummaryWriter
 
 from transformer.transformer import Transformer
 from util.text_tokenizer import TextTokenizer
@@ -21,7 +23,9 @@ if __name__ == "__main__":
     parser.add_argument("--pt-val", required=True)
     parser.add_argument("--pt-test", required=True)
     parser.add_argument("--model-dim", type=int, default=512)
+    parser.add_argument("--num-steps", type=int, default=100000)
     parser.add_argument("--num-warmup-steps", type=int, default=4000)
+    parser.add_argument("--output-dir", default="/tmp/")
     args = parser.parse_args()
 
     en_tokenizer = TextTokenizer.from_file(path=args.en_tokenizer)
@@ -59,6 +63,8 @@ if __name__ == "__main__":
 
     # taken from the paper
     optimizer = optim.Adam(transformer.parameters(), betas=(0.9, 0.98), eps=1e-9)
+    # lr increases linearly during warmup and decreases afterwards proportionnally
+    # to the inverse sqrt of the step number
     scheduler = optim.lr_scheduler.LambdaLR(
         optimizer,
         lambda num_steps: (
@@ -69,3 +75,10 @@ if __name__ == "__main__":
             )
         ),
     )
+
+    summary_writer = SummaryWriter(log_dir=os.path.join(args.output_dir, "tensorboard"))
+    train_log_file = os.path.join(args.output_dir, "train.log")
+    val_log_file = os.path.join(args.output_dir, "validation.log")
+    with open(train_log_file, "w") as train_log, open(val_log_file) as val_log:
+        train_log.write("epoch,loss,perplexity,accuracy\n")
+        val_log.write("epoch,loss,perplexity,accuracy\n")
