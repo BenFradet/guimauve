@@ -1,5 +1,6 @@
 import argparse
 
+import torch.optim as optim
 from torch.utils.data import DataLoader
 
 from transformer.transformer import Transformer
@@ -19,6 +20,8 @@ if __name__ == "__main__":
     parser.add_argument("--pt-train", required=True)
     parser.add_argument("--pt-val", required=True)
     parser.add_argument("--pt-test", required=True)
+    parser.add_argument("--model-dim", type=int, default=512)
+    parser.add_argument("--num-warmup-steps", type=int, default=4000)
     args = parser.parse_args()
 
     en_tokenizer = TextTokenizer.from_file(path=args.en_tokenizer)
@@ -51,4 +54,18 @@ if __name__ == "__main__":
         source_vocab_size=en_tokenizer.vocab_size,
         target_vocab_size=pt_tokenizer.vocab_size,
         seq_length=en_tokenizer.max_len,
+        model_dim=args.model_dim,
+    )
+
+    # taken from the paper
+    optimizer = optim.Adam(transformer.parameters(), betas=(0.9, 0.98), eps=1e-9)
+    scheduler = optim.lr_scheduler.LambdaLR(
+        optimizer,
+        lambda num_steps: (
+            args.model_dim**-0.5
+            * min(
+                max(num_steps, 1) ** -0.5,
+                max(num_steps, 1) * args.num_warmup_steps**-1.5,
+            )
+        ),
     )
