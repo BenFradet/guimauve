@@ -1,13 +1,45 @@
 import argparse
 import os
 
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
 import torch.optim as optim
+import torch.types as types
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
+from tqdm import tqdm
 
 from transformer.transformer import Transformer
 from util.text_tokenizer import TextTokenizer
 from util.translation_dataset import TranslationDataset
+
+
+def compute_loss(
+    predictions: torch.Tensor, label: torch.Tensor, pad_idx: int = 0
+) -> tuple[torch.Tensor, types.Number, types.Number]:
+    """
+    pad is '[PAD]' at index 0
+    """
+    # label is [batch size, seq len]
+    # this turns it into [batch size * seq len]
+    label = label.contiguous().view(-1)
+    # output of transofmer is [batch size, seq len, vocab size]
+    # this turns it into [batch size * seq len, vocab size]
+    predictions = predictions.view(-1, predictions.size(-1))
+
+    loss = F.cross_entropy(predictions, label, ignore_index=pad_idx, reduction="sum")
+
+    # predicted token id with highest score
+    predictions = predictions.argmax(dim=1)
+
+    non_pad_mask = label.ne(pad_idx)
+
+    correct_words = predictions.eq(label).masked_select(non_pad_mask).sum().item()
+    words = non_pad_mask.sum().item()
+
+    return loss, words, correct_words
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -79,6 +111,8 @@ if __name__ == "__main__":
     summary_writer = SummaryWriter(log_dir=os.path.join(args.output_dir, "tensorboard"))
     train_log_file = os.path.join(args.output_dir, "train.log")
     val_log_file = os.path.join(args.output_dir, "validation.log")
-    with open(train_log_file, "w") as train_log, open(val_log_file) as val_log:
+    with open(train_log_file, "w") as train_log, open(val_log_file, "w") as val_log:
         train_log.write("epoch,loss,perplexity,accuracy\n")
         val_log.write("epoch,loss,perplexity,accuracy\n")
+
+    train_epoch(transformer, train_dl, scheduler)
