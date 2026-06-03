@@ -43,37 +43,45 @@ def compute_loss(
     return loss, words, correct_words
 
 
-def train_epoch(
+def epoch(
     model: nn.Module,
-    training_data_loader: DataLoader,
+    data_loader: DataLoader,
     scheduler: optim.lr_scheduler.LRScheduler,
+    training: bool,
 ) -> tuple[float, float]:
-    model.train()
+    model.train() if training else model.eval()
     total_loss, total_words, total_correct_words = 0, 0, 0
 
-    for source, target in tqdm(
-        training_data_loader,
-        mininterval=2,
-        desc="training",
-        leave=False,
-    ):
-        # input to the decoder [START, t1, t2, ...]
-        target_input = target[:, :-1]
-        # expected output [t1, t2, ..., END]
-        target_label = target[:, 1:]
+    desc = "training" if training else "validation"
 
-        scheduler.optimizer.zero_grad()
-        predictions = model(source, target_input)
+    with torch.set_grad_enabled(training):
+        for source, target in tqdm(
+            data_loader,
+            mininterval=2,
+            desc=desc,
+            leave=False,
+        ):
+            # input to the decoder [START, t1, t2, ...]
+            target_input = target[:, :-1]
+            # expected output [t1, t2, ..., END]
+            target_label = target[:, 1:]
 
-        loss, words, correct_words = compute_loss(predictions, target_label)
-        loss.backward()
-        scheduler.optimizer.step()
-        # changes the learning rate
-        scheduler.step()
+            if training:
+                scheduler.optimizer.zero_grad()
 
-        total_words += words
-        total_correct_words += correct_words
-        total_loss += loss.item()
+            predictions = model(source, target_input)
+
+            loss, words, correct_words = compute_loss(predictions, target_label)
+
+            if training:
+                loss.backward()
+                scheduler.optimizer.step()
+                # changes the learning rate
+                scheduler.step()
+
+            total_words += words
+            total_correct_words += correct_words
+            total_loss += loss.item()
 
     loss_per_word = total_loss / total_words
     accuracy = total_correct_words / total_words
@@ -83,13 +91,17 @@ def train_epoch(
 def debug(
     stage: str,
     start_time: float,
-    perplexity: float,
+    loss: float,
     accuracy: float,
-    learning_rate: float,
+    learning_rate: float | None = None,
 ) -> None:
-    elapsed = time.time() - start_time / 60
+    elapsed = (time.time() - start_time) / 60
+    perplexity = math.exp(min(loss, 100))
+    lr_str = (
+        f", learning rate: {learning_rate:8.5f}" if learning_rate is not None else ""
+    )
     print(
-        f"{stage}, elapsed: {elapsed:3.3f} - perplexity: {perplexity:8.5f}, accuracy: {accuracy:3.3f}, learning rate: {learning_rate:8.5f}"
+        f"{stage}, elapsed: {elapsed:3.3f}min - perplexity: {perplexity:8.5f}, accuracy: {accuracy:3.3f}{lr_str}"
     )
 
 
@@ -168,19 +180,29 @@ if __name__ == "__main__":
         train_log.write("epoch,loss,perplexity,accuracy\n")
         val_log.write("epoch,loss,perplexity,accuracy\n")
 
-    start_time = time.time()
-
     for epoch_i in range(args.num_steps):
         print(f"epoch {epoch_i}")
-        train_loss, train_accuracy = train_epoch(transformer, train_dl, scheduler)
 
+        start_time = time.time()
+        train_loss, train_accuracy = epoch(
+            transformer, train_dl, scheduler, training=True
+        )
         if args.debug:
-            perplexity = math.exp(min(train_loss, 100))
             current_learning_rate = float(scheduler.get_last_lr()[0])
             debug(
                 stage="Training",
                 start_time=start_time,
-                perplexity=perplexity,
+                loss=train_loss,
                 accuracy=train_accuracy,
                 learning_rate=current_learning_rate,
+            )
+
+        start_time = time.time()
+        val_loss, val_accuracy = epoch(transformer, val_dl, scheduler, training=False)
+        if args.debug:
+            debug(
+                stage="Validation",
+                start_time=start_time,
+                loss=val_loss,
+                accuracy=val_accuracy,
             )
