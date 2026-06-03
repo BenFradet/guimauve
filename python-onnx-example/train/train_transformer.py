@@ -176,6 +176,7 @@ if __name__ == "__main__":
     summary_writer = SummaryWriter(log_dir=os.path.join(args.output_dir, "tensorboard"))
     train_log_file = os.path.join(args.output_dir, "train.log")
     val_log_file = os.path.join(args.output_dir, "validation.log")
+
     with open(train_log_file, "w") as train_log, open(val_log_file, "w") as val_log:
         train_log.write("epoch,loss,perplexity,accuracy\n")
         val_log.write("epoch,loss,perplexity,accuracy\n")
@@ -206,3 +207,12 @@ if __name__ == "__main__":
                 loss=val_loss,
                 accuracy=val_accuracy,
             )
+
+    start_time = time.time()
+    test_loss, test_accuracy = epoch(transformer, test_dl, scheduler, training=False)
+    debug(
+        stage="Test",
+        start_time=start_time,
+        loss=test_loss,
+        accuracy=test_accuracy,
+    )
