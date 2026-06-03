@@ -1,6 +1,7 @@
 from tokenizers import Tokenizer
 from tokenizers.models import BPE
 from tokenizers.pre_tokenizers import Whitespace
+from tokenizers.processors import TemplateProcessing
 from tokenizers.trainers import BpeTrainer
 
 
@@ -23,6 +24,10 @@ class TextTokenizer:
         self.tokenizer.pre_tokenizer = Whitespace()
         self.tokenizer.enable_padding(length=max_len, pad_id=0)
         self.tokenizer.enable_truncation(max_length=max_len)
+        self.tokenizer.post_processor = TemplateProcessing(
+            single="[START] $A [END]",
+            special_tokens=[("[START]", 1), ("[END]", 2)],
+        )
 
     def train(self, files: list[str]) -> None:
         """
@@ -70,7 +75,7 @@ class TextTokenizer:
     def from_file(cls, path: str, max_len: int = 128) -> "TextTokenizer":
         """
         creates a TextTokenizer from a file location on disk
-        
+
         Args:
             path: file where the serialized tokenizer is saved
             max_len: sequence length for padding and truncation
