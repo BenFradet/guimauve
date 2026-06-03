@@ -41,6 +41,43 @@ def compute_loss(
     return loss, words, correct_words
 
 
+def train_epoch(
+    model: nn.Module,
+    training_data_loader: DataLoader,
+    scheduler: optim.lr_scheduler.LRScheduler,
+) -> tuple[float, float]:
+    model.train()
+    total_loss, total_words, total_correct_words = 0, 0, 0
+
+    for source, target in tqdm(
+        training_data_loader,
+        mininterval=2,
+        desc="training",
+        leave=False,
+    ):
+        # input to the decoder [START, t1, t2, ...]
+        target_input = target[:, :-1]
+        # expected output [t1, t2, ..., END]
+        target_label = target[:, 1:]
+
+        scheduler.optimizer.zero_grad()
+        predictions = model(source, target_input)
+
+        loss, words, correct_words = compute_loss(predictions, target_label)
+        loss.backward()
+        scheduler.optimizer.step()
+        # changes the learning rate
+        scheduler.step()
+
+        total_words += words
+        total_correct_words += correct_words
+        total_loss += loss.item()
+
+    loss_per_word = total_loss / total_words
+    accuracy = total_correct_words / total_words
+    return (loss_per_word, accuracy)
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         prog="train_transformer",
