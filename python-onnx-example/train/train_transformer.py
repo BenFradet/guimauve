@@ -1,5 +1,7 @@
 import argparse
+import math
 import os
+import time
 
 import torch
 import torch.nn as nn
@@ -78,6 +80,19 @@ def train_epoch(
     return (loss_per_word, accuracy)
 
 
+def debug(
+    stage: str,
+    start_time: float,
+    perplexity: float,
+    accuracy: float,
+    learning_rate: float,
+) -> None:
+    elapsed = time.time() - start_time / 60
+    print(
+        f"{stage}, elapsed: {elapsed:3.3f} - perplexity: {perplexity:8.5f}, accuracy: {accuracy:3.3f}, learning rate: {learning_rate:8.5f}"
+    )
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         prog="train_transformer",
@@ -95,6 +110,7 @@ if __name__ == "__main__":
     parser.add_argument("--num-steps", type=int, default=100000)
     parser.add_argument("--num-warmup-steps", type=int, default=4000)
     parser.add_argument("--output-dir", default="/tmp/")
+    parser.add_argument("--debug", type=bool, default=True)
     args = parser.parse_args()
 
     en_tokenizer = TextTokenizer.from_file(path=args.en_tokenizer)
@@ -152,4 +168,19 @@ if __name__ == "__main__":
         train_log.write("epoch,loss,perplexity,accuracy\n")
         val_log.write("epoch,loss,perplexity,accuracy\n")
 
-    train_epoch(transformer, train_dl, scheduler)
+    start_time = time.time()
+
+    for epoch_i in range(args.num_steps):
+        print(f"epoch {epoch_i}")
+        train_loss, train_accuracy = train_epoch(transformer, train_dl, scheduler)
+
+        if args.debug:
+            perplexity = math.exp(min(train_loss, 100))
+            current_learning_rate = float(scheduler.get_last_lr()[0])
+            debug(
+                stage="Training",
+                start_time=start_time,
+                perplexity=perplexity,
+                accuracy=train_accuracy,
+                learning_rate=current_learning_rate,
+            )
