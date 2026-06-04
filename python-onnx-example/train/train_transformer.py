@@ -99,11 +99,41 @@ def debug(
     elapsed = (time.time() - start_time) / 60
     perplexity = math.exp(min(loss, 100))
     lr_str = (
-        f", learning rate: {learning_rate:8.3f}" if learning_rate is not None else ""
+        f", learning rate: {learning_rate:.2e}" if learning_rate is not None else ""
     )
     print(
         f"{stage}, elapsed: {elapsed:8.2f}min - perplexity: {perplexity:8.3f}, accuracy: {accuracy:8.3f}{lr_str}"
     )
+
+
+def save_onnx(
+    model: nn.Module,
+    model_filename: str,
+    location: str,
+    en_tokenizer: TextTokenizer,
+    pt_tokenizer: TextTokenizer,
+) -> None:
+    checkpoint = torch.load(os.path.join(location, model_filename))
+    model.load_state_dict(checkpoint["model"])
+    model.eval()
+
+    source = torch.randint(0, en_tokenizer.vocab_size, (1, en_tokenizer.max_len))
+    target = torch.randint(0, pt_tokenizer.vocab_size, (1, pt_tokenizer.max_len - 1))
+
+    onnx_location = os.path.join(location, "transformer.onnx")
+    torch.onnx.export(
+        model,
+        (source, target),
+        onnx_location,
+        input_names=["source", "target"],
+        output_names=["logits"],
+        dynamic_axes={
+            "source": {0: "batch_size"},
+            "target": {0: "batch_size"},
+            "logits": {0: "batch_size"},
+        },
+    )
+    print(f"saved onnx model at {onnx_location}")
 
 
 if __name__ == "__main__":
@@ -181,6 +211,7 @@ if __name__ == "__main__":
     summary_writer = SummaryWriter(log_dir=os.path.join(args.output_dir, "tensorboard"))
     train_log_file = os.path.join(args.output_dir, "train.log")
     val_log_file = os.path.join(args.output_dir, "validation.log")
+    model_filename = "model.chkpt"
 
     with open(train_log_file, "w") as train_log, open(val_log_file, "w") as val_log:
         train_log.write("epoch,loss,accuracy\n")
@@ -217,8 +248,12 @@ if __name__ == "__main__":
 
         if val_loss < min_validation_loss:
             min_validation_loss = val_loss
-            model_filename = os.path.join(args.output_dir, "model.chkpt")
-            torch.save({"epoch": epoch_i, "model": transformer.state_dict()}, model_filename)
+            model_location = os.path.join(args.output_dir, model_filename)
+            torch.save(
+                {"epoch": epoch_i, "model": transformer.state_dict()},
+                model_location,
+            )
+            print(f"saved a new model at {model_location}")
 
         with open(train_log_file, "a") as train_log, open(val_log_file, "a") as val_log:
             train_log.write(f"{epoch_i}, {train_loss:8.3f}, {train_accuracy:8.3f}\n")
@@ -239,4 +274,12 @@ if __name__ == "__main__":
         start_time=start_time,
         loss=test_loss,
         accuracy=test_accuracy,
+    )
+
+    save_onnx(
+        model=transformer,
+        model_filename=model_filename,
+        location=args.output_dir,
+        en_tokenizer=en_tokenizer,
+        pt_tokenizer=pt_tokenizer,
     )
