@@ -193,8 +193,9 @@ if __name__ == "__main__":
         num_layers=args.num_layers,
     )
 
-    # taken from the paper
-    optimizer = optim.Adam(transformer.parameters(), betas=(0.9, 0.98), eps=1e-9)
+    # betas and esp taken from the paper
+    # lr defaults to 0.001 which is then multiplied by the LambdaLR's lambda so we set it to 1
+    optimizer = optim.Adam(transformer.parameters(), lr=1.0, betas=(0.9, 0.98), eps=1e-9)
     # lr increases linearly during warmup and decreases afterwards proportionnally
     # to the inverse sqrt of the step number
     scheduler = optim.lr_scheduler.LambdaLR(
