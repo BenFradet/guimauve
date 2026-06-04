@@ -119,7 +119,9 @@ if __name__ == "__main__":
     parser.add_argument("--pt-train", required=True)
     parser.add_argument("--pt-val", required=True)
     parser.add_argument("--pt-test", required=True)
-    parser.add_argument("--model-dim", type=int, default=512)
+    parser.add_argument("--model-dim", type=int, default=256)
+    parser.add_argument("--num-heads", type=int, default=4)
+    parser.add_argument("--num-layers", type=int, default=3)
     parser.add_argument("--num-epochs", type=int, default=100)
     parser.add_argument("--num-warmup-steps", type=int, default=4000)
     parser.add_argument("--output-dir", default="/tmp/")
@@ -157,6 +159,8 @@ if __name__ == "__main__":
         target_vocab_size=pt_tokenizer.vocab_size,
         seq_length=en_tokenizer.max_len,
         model_dim=args.model_dim,
+        num_heads=args.num_heads,
+        num_layers=args.num_layers,
     )
 
     # taken from the paper
