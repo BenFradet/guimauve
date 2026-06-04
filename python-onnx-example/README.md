@@ -13,3 +13,19 @@ uv run -m train.train_tokenizer \
     -i ../datasets/pt_to_en/en.train \
     -o ../models/pt_to_en/en_tokenizer.json
 ```
+
+### Transformer
+
+```bash
+uv run -m train.train_transformer \
+    --en-tokenizer ../models/pt_to_en/en_tokenizer.json \
+    --en-train ../datasets/pt_to_en/en.train \
+    --en-val ../datasets/pt_to_en/en.dev \
+    --en-test ../datasets/pt_to_en/en.test \
+    --pt-tokenizer ../models/pt_to_en/pt_tokenizer.json \
+    --pt-train ../datasets/pt_to_en/pt.train \
+    --pt-val ../datasets/pt_to_en/pt.dev \
+    --pt-test ../datasets/pt_to_en/pt.test \
+    --output-dir ../models/pt_to_en \
+    --debug
+```

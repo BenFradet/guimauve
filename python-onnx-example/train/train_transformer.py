@@ -1,6 +1,7 @@
 import argparse
 import math
 import os
+import sys
 import time
 
 import torch
@@ -26,7 +27,7 @@ def compute_loss(
     # label is [batch size, seq len]
     # this turns it into [batch size * seq len]
     label = label.contiguous().view(-1)
-    # output of transofmer is [batch size, seq len, vocab size]
+    # output of transformer is [batch size, seq len, vocab size]
     # this turns it into [batch size * seq len, vocab size]
     predictions = predictions.view(-1, predictions.size(-1))
 
@@ -98,10 +99,10 @@ def debug(
     elapsed = (time.time() - start_time) / 60
     perplexity = math.exp(min(loss, 100))
     lr_str = (
-        f", learning rate: {learning_rate:8.5f}" if learning_rate is not None else ""
+        f", learning rate: {learning_rate:8.3f}" if learning_rate is not None else ""
     )
     print(
-        f"{stage}, elapsed: {elapsed:3.3f}min - perplexity: {perplexity:8.5f}, accuracy: {accuracy:3.3f}{lr_str}"
+        f"{stage}, elapsed: {elapsed:8.2f}min - perplexity: {perplexity:8.3f}, accuracy: {accuracy:8.3f}{lr_str}"
     )
 
 
@@ -119,10 +120,10 @@ if __name__ == "__main__":
     parser.add_argument("--pt-val", required=True)
     parser.add_argument("--pt-test", required=True)
     parser.add_argument("--model-dim", type=int, default=512)
-    parser.add_argument("--num-steps", type=int, default=100000)
+    parser.add_argument("--num-epochs", type=int, default=100)
     parser.add_argument("--num-warmup-steps", type=int, default=4000)
     parser.add_argument("--output-dir", default="/tmp/")
-    parser.add_argument("--debug", type=bool, default=True)
+    parser.add_argument("--debug", action="store_true")
     args = parser.parse_args()
 
     en_tokenizer = TextTokenizer.from_file(path=args.en_tokenizer)
@@ -148,7 +149,7 @@ if __name__ == "__main__":
         src_tokenizer=en_tokenizer,
         tgt_tokenizer=pt_tokenizer,
     )
-    test_dl = DataLoader(test_ds, batch_size=64, shuffle=True)
+    test_dl = DataLoader(test_ds, batch_size=64)
 
     # tokenizers params might need tuning
     transformer = Transformer(
@@ -178,24 +179,26 @@ if __name__ == "__main__":
     val_log_file = os.path.join(args.output_dir, "validation.log")
 
     with open(train_log_file, "w") as train_log, open(val_log_file, "w") as val_log:
-        train_log.write("epoch,loss,perplexity,accuracy\n")
-        val_log.write("epoch,loss,perplexity,accuracy\n")
+        train_log.write("epoch,loss,accuracy\n")
+        val_log.write("epoch,loss,accuracy\n")
 
-    for epoch_i in range(args.num_steps):
+    min_validation_loss = sys.float_info.max
+
+    for epoch_i in range(args.num_epochs):
         print(f"epoch {epoch_i}")
 
         start_time = time.time()
         train_loss, train_accuracy = epoch(
             transformer, train_dl, scheduler, training=True
         )
+        learning_rate = float(scheduler.get_last_lr()[0])
         if args.debug:
-            current_learning_rate = float(scheduler.get_last_lr()[0])
             debug(
                 stage="Training",
                 start_time=start_time,
                 loss=train_loss,
                 accuracy=train_accuracy,
-                learning_rate=current_learning_rate,
+                learning_rate=learning_rate,
             )
 
         start_time = time.time()
@@ -207,6 +210,23 @@ if __name__ == "__main__":
                 loss=val_loss,
                 accuracy=val_accuracy,
             )
+
+        if val_loss < min_validation_loss:
+            min_validation_loss = val_loss
+            model_filename = os.path.join(args.output_dir, "model.chkpt")
+            torch.save({"epoch": epoch_i, "model": transformer.state_dict()}, model_filename)
+
+        with open(train_log_file, "a") as train_log, open(val_log_file, "a") as val_log:
+            train_log.write(f"{epoch_i}, {train_loss:8.3f}, {train_accuracy:8.3f}\n")
+            val_log.write(f"{epoch_i}, {val_loss:8.3f}, {val_accuracy:8.3f}\n")
+
+        summary_writer.add_scalars(
+            "loss", {"train": train_loss, "val": val_loss}, epoch_i
+        )
+        summary_writer.add_scalars(
+            "accuracy", {"train": train_accuracy, "val": val_accuracy}, epoch_i
+        )
+        summary_writer.add_scalar("learning_rate", learning_rate, epoch_i)
 
     start_time = time.time()
     test_loss, test_accuracy = epoch(transformer, test_dl, scheduler, training=False)
