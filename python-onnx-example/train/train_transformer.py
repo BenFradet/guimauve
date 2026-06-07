@@ -31,7 +31,14 @@ def compute_loss(
     # this turns it into [batch size * seq len, vocab size]
     predictions = predictions.view(-1, predictions.size(-1))
 
-    loss = F.cross_entropy(predictions, label, ignore_index=pad_idx, reduction="sum")
+    # smoothing: "hurts perplexity, as the model learns to be more unsure, but improves accuracy"
+    loss = F.cross_entropy(
+        predictions,
+        label,
+        ignore_index=pad_idx,
+        reduction="sum",
+        label_smoothing=0.1,
+    )
 
     # predicted token id with highest score
     predictions = predictions.argmax(dim=1)
@@ -195,7 +202,12 @@ if __name__ == "__main__":
 
     # betas and esp taken from the paper
     # lr defaults to 0.001 which is then multiplied by the LambdaLR's lambda so we set it to 1
-    optimizer = optim.Adam(transformer.parameters(), lr=1.0, betas=(0.9, 0.98), eps=1e-9)
+    optimizer = optim.Adam(
+        transformer.parameters(),
+        lr=1.0,
+        betas=(0.9, 0.98),
+        eps=1e-9,
+    )
     # lr increases linearly during warmup and decreases afterwards proportionnally
     # to the inverse sqrt of the step number
     scheduler = optim.lr_scheduler.LambdaLR(
