@@ -2,14 +2,14 @@ use std::path::Path;
 
 use anyhow::{Error, Result};
 use burn::backend::{Flex, flex::FlexDevice};
-use burn::tensor::{Float, Int, Tensor};
+use burn::tensor::{Int, Tensor, TensorData};
 use model::Model;
 use plugin::model_plugin::ModelPlugin;
 use serde::{Deserialize, Serialize};
 use tokenizers::Tokenizer;
 
 pub mod model {
-    include!(concat!(env!("OUT_DIR"), "/model/model.rs"));
+    include!(concat!(env!("OUT_DIR"), "/model/transformer.rs"));
 }
 
 #[derive(Deserialize)]
@@ -22,13 +22,13 @@ struct TranslationResponse {
     pt_sentence: String,
 }
 
+// model is expecting [batch, seq_len], hence 2d
 struct TranslationModelInput {
-    source: Tensor<Flex, 2, Int>,
-    target: Tensor<Flex, 2, Int>,
+    source_token_ids: Tensor<Flex, 2, Int>,
 }
 
 struct TranslationModelOutput {
-    logits: Tensor<Flex, 3, Float>,
+    predicted_token_ids: Tensor<Flex, 1, Int>,
 }
 
 struct TranslationPlugin {
@@ -63,7 +63,17 @@ impl ModelPlugin for TranslationPlugin {
     type ModelOutput = TranslationModelOutput;
 
     fn pre(&self, req: Self::Request) -> Result<Self::ModelInput, Self::Error> {
-        todo!()
+        let tokenized = self
+            .en_tokenizer
+            .encode(req.en_sentence, false)
+            .map_err(Error::msg)?;
+        let ids = tokenized.get_ids();
+        let input_tensor = Tensor::<Flex, 1, Int>::from_data(TensorData::from(ids), &self.device)
+            // model is expecting [batch, seq_len], here [1, seq_len]
+            .unsqueeze::<2>();
+        Ok(TranslationModelInput {
+            source_token_ids: input_tensor,
+        })
     }
 
     fn infer(&self, input: Self::ModelInput) -> Result<Self::ModelOutput, Self::Error> {
