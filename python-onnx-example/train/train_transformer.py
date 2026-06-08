@@ -160,6 +160,7 @@ if __name__ == "__main__":
     parser.add_argument("--num-heads", type=int, default=4)
     parser.add_argument("--num-layers", type=int, default=3)
     parser.add_argument("--num-epochs", type=int, default=100)
+    parser.add_argument("--num-no-improvement-epochs", type=int, default=3)
     parser.add_argument("--num-warmup-steps", type=int, default=4000)
     parser.add_argument("--output-dir", default="/tmp/")
     parser.add_argument("--debug", action="store_true")
@@ -231,6 +232,7 @@ if __name__ == "__main__":
         val_log.write("epoch,loss,accuracy\n")
 
     min_validation_loss = sys.float_info.max
+    no_improvement_counter = 0
 
     for epoch_i in range(args.num_epochs):
         print(f"epoch {epoch_i}")
@@ -260,6 +262,7 @@ if __name__ == "__main__":
             )
 
         if val_loss < min_validation_loss:
+            no_improvement_counter = 0
             min_validation_loss = val_loss
             model_location = os.path.join(args.output_dir, model_filename)
             torch.save(
@@ -267,6 +270,8 @@ if __name__ == "__main__":
                 model_location,
             )
             print(f"saved a new model at {model_location}")
+        else:
+            no_improvement_counter += 1
 
         with open(train_log_file, "a") as train_log, open(val_log_file, "a") as val_log:
             train_log.write(f"{epoch_i}, {train_loss:8.3f}, {train_accuracy:8.3f}\n")
@@ -279,6 +284,10 @@ if __name__ == "__main__":
             "accuracy", {"train": train_accuracy, "val": val_accuracy}, epoch_i
         )
         summary_writer.add_scalar("learning_rate", learning_rate, epoch_i)
+
+        if no_improvement_counter >= args.num_no_improvement_epochs:
+            print(f"no improvements for {args.num_no_improvement_epochs} epochs, quitting")
+            break
 
     start_time = time.time()
     test_loss, test_accuracy = epoch(transformer, test_dl, scheduler, training=False)
