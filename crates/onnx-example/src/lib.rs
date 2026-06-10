@@ -13,25 +13,25 @@ pub mod model {
 }
 
 #[derive(Deserialize)]
-struct TranslationRequest {
+pub struct TranslationRequest {
     en_sentence: String,
 }
 
 #[derive(Serialize)]
-struct TranslationResponse {
+pub struct TranslationResponse {
     pt_sentence: String,
 }
 
 // model is expecting [batch, seq_len], hence 2d
-struct TranslationModelInput {
+pub struct TranslationModelInput {
     source_token_ids: Tensor<Flex, 2, Int>,
 }
 
-struct TranslationModelOutput {
+pub struct TranslationModelOutput {
     predicted_token_ids: Tensor<Flex, 1, Int>,
 }
 
-struct TranslationPlugin {
+pub struct TranslationPlugin {
     model: model::Model<Flex>,
     device: FlexDevice,
     en_tokenizer: Tokenizer,
@@ -39,7 +39,7 @@ struct TranslationPlugin {
 }
 
 impl TranslationPlugin {
-    fn new(en_tokenizer_path: &Path, pt_tokenizer_path: &Path) -> Result<Self> {
+    pub fn new(en_tokenizer_path: &Path, pt_tokenizer_path: &Path) -> Result<Self> {
         let device = FlexDevice;
         let model: Model<Flex> = Model::default();
 
@@ -56,10 +56,6 @@ impl TranslationPlugin {
 
     fn encode_src(&self, en_sentence: &str) -> Result<Tensor<Flex, 2, Int>> {
         self.encode(&self.en_tokenizer, en_sentence)
-    }
-
-    fn encode_tgt(&self, pt_sentence: &str) -> Result<Tensor<Flex, 2, Int>> {
-        self.encode(&self.pt_tokenizer, pt_sentence)
     }
 
     fn encode(&self, tokenizer: &Tokenizer, sentence: &str) -> Result<Tensor<Flex, 2, Int>> {
@@ -132,6 +128,8 @@ impl ModelPlugin for TranslationPlugin {
     fn post(&self, output: Self::ModelOutput) -> Result<Self::Response, Self::Error> {
         let data = output.predicted_token_ids.to_data().into_vec()?;
         let decoded = self.pt_tokenizer.decode(&data, true).map_err(Error::msg)?;
-        Ok(TranslationResponse { pt_sentence: decoded })
+        Ok(TranslationResponse {
+            pt_sentence: decoded,
+        })
     }
 }
