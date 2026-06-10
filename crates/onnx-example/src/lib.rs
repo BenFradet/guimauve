@@ -130,6 +130,8 @@ impl ModelPlugin for TranslationPlugin {
     }
 
     fn post(&self, output: Self::ModelOutput) -> Result<Self::Response, Self::Error> {
-        todo!()
+        let data = output.predicted_token_ids.to_data().into_vec()?;
+        let decoded = self.pt_tokenizer.decode(&data, true).map_err(Error::msg)?;
+        Ok(TranslationResponse { pt_sentence: decoded })
     }
 }
