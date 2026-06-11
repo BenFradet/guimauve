@@ -100,7 +100,7 @@ impl ModelPlugin for TranslationPlugin {
             .pt_tokenizer
             .get_truncation()
             .map(|t| t.max_length)
-            .unwrap_or(64);
+            .unwrap_or(128);
 
         let mut last_id = start_id;
         let mut ids = vec![start_id];

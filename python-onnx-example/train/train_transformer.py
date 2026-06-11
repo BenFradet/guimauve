@@ -156,7 +156,7 @@ if __name__ == "__main__":
     parser.add_argument("--pt-train", required=True)
     parser.add_argument("--pt-val", required=True)
     parser.add_argument("--pt-test", required=True)
-    parser.add_argument("--max-seq-len", type=int, default=64)
+    parser.add_argument("--max-seq-len", type=int, default=128)
     parser.add_argument("--model-dim", type=int, default=256)
     parser.add_argument("--num-heads", type=int, default=4)
     parser.add_argument("--num-layers", type=int, default=3)
