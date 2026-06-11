@@ -156,6 +156,7 @@ if __name__ == "__main__":
     parser.add_argument("--pt-train", required=True)
     parser.add_argument("--pt-val", required=True)
     parser.add_argument("--pt-test", required=True)
+    parser.add_argument("--max-len", type=int, default=64)
     parser.add_argument("--model-dim", type=int, default=256)
     parser.add_argument("--num-heads", type=int, default=4)
     parser.add_argument("--num-layers", type=int, default=3)
@@ -166,8 +167,8 @@ if __name__ == "__main__":
     parser.add_argument("--debug", action="store_true")
     args = parser.parse_args()
 
-    en_tokenizer = TextTokenizer.from_file(path=args.en_tokenizer)
-    pt_tokenizer = TextTokenizer.from_file(path=args.pt_tokenizer)
+    en_tokenizer = TextTokenizer.from_file(path=args.en_tokenizer, default_max_len=args.max_len)
+    pt_tokenizer = TextTokenizer.from_file(path=args.pt_tokenizer, default_max_len=args.max_len)
 
     train_ds = TranslationDataset(
         src_file=args.en_train,
@@ -286,7 +287,9 @@ if __name__ == "__main__":
         summary_writer.add_scalar("learning_rate", learning_rate, epoch_i)
 
         if no_improvement_counter >= args.num_no_improvement_epochs:
-            print(f"no improvements for {args.num_no_improvement_epochs} epochs, quitting")
+            print(
+                f"no improvements for {args.num_no_improvement_epochs} epochs, quitting"
+            )
             break
 
     start_time = time.time()

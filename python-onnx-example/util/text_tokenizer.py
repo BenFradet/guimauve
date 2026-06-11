@@ -72,7 +72,7 @@ class TextTokenizer:
         self.tokenizer.save(path)
 
     @classmethod
-    def from_file(cls, path: str, max_len: int = 128) -> "TextTokenizer":
+    def from_file(cls, path: str, default_max_len: int) -> "TextTokenizer":
         """
         creates a TextTokenizer from a file location on disk
 
@@ -84,6 +84,10 @@ class TextTokenizer:
             A trained TextTokenizer loaded from disk
         """
         tokenizer = Tokenizer.from_file(path)
-        instance = cls(vocab_size=tokenizer.get_vocab_size(), max_len=max_len)
+        instance = cls(
+            vocab_size=tokenizer.get_vocab_size(),
+            # yikes
+            max_len=(tokenizer.truncation or {}).get("max_length") or default_max_len,
+        )
         instance.tokenizer = tokenizer
         return instance
