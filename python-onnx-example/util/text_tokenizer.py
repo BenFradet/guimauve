@@ -12,18 +12,18 @@ class TextTokenizer:
     c.f. https://github.com/huggingface/tokenizers
     """
 
-    def __init__(self, vocab_size: int = 8000, max_len: int = 128) -> None:
+    def __init__(self, vocab_size: int = 8000, max_seq_len: int = 128) -> None:
         """
         Args:
             vocab_size: maximum number of tokens in the vocabulary
-            max_len: sequence length for padding and truncation
+            max_seq_len: maximum sequence length for padding and truncation
         """
         self.vocab_size = vocab_size
-        self.max_len = max_len
+        self.max_seq_len = max_seq_len
         self.tokenizer = Tokenizer(BPE())
         self.tokenizer.pre_tokenizer = Whitespace()
-        self.tokenizer.enable_padding(length=max_len, pad_id=0)
-        self.tokenizer.enable_truncation(max_length=max_len)
+        self.tokenizer.enable_padding(length=max_seq_len, pad_id=0)
+        self.tokenizer.enable_truncation(max_length=max_seq_len)
         self.tokenizer.post_processor = TemplateProcessing(
             single="[START] $A [END]",
             special_tokens=[("[START]", 1), ("[END]", 2)],
@@ -48,7 +48,7 @@ class TextTokenizer:
             text: input string to tokenize
 
         Returns:
-            token IDs padded/truncated to max_len
+            token IDs padded/truncated to max_seq_len
         """
         return self.tokenizer.encode(text).ids
 
@@ -72,13 +72,14 @@ class TextTokenizer:
         self.tokenizer.save(path)
 
     @classmethod
-    def from_file(cls, path: str, default_max_len: int) -> "TextTokenizer":
+    def from_file(cls, path: str, default_max_seq_len: int) -> "TextTokenizer":
         """
         creates a TextTokenizer from a file location on disk
 
         Args:
             path: file where the serialized tokenizer is saved
-            max_len: sequence length for padding and truncation
+            default_max_seq_len: fall back sequence length for padding and truncation if it can't be
+            read from the file
 
         Returns:
             A trained TextTokenizer loaded from disk
@@ -87,7 +88,8 @@ class TextTokenizer:
         instance = cls(
             vocab_size=tokenizer.get_vocab_size(),
             # yikes
-            max_len=(tokenizer.truncation or {}).get("max_length") or default_max_len,
+            max_seq_len=(tokenizer.truncation or {}).get("max_length")
+            or default_max_seq_len,
         )
         instance.tokenizer = tokenizer
         return instance

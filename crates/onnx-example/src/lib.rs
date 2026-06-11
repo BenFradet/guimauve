@@ -96,7 +96,7 @@ impl ModelPlugin for TranslationPlugin {
             .context("couldn't convert [END]")?;
 
         let vocab_size = self.pt_tokenizer.get_vocab_size(false);
-        let max_len = self
+        let max_seq_len = self
             .pt_tokenizer
             .get_truncation()
             .map(|t| t.max_length)
@@ -105,7 +105,7 @@ impl ModelPlugin for TranslationPlugin {
         let mut last_id = start_id;
         let mut ids = vec![start_id];
 
-        while ids.len() < max_len && last_id != end_id {
+        while ids.len() < max_seq_len && last_id != end_id {
             let target =
                 Tensor::<Flex, 1, Int>::from_data(TensorData::from(&ids[..]), &self.device)
                     .unsqueeze::<2>();

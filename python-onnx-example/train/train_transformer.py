@@ -124,8 +124,8 @@ def save_onnx(
     model.load_state_dict(checkpoint["model"])
     model.eval()
 
-    source = torch.randint(0, en_tokenizer.vocab_size, (1, en_tokenizer.max_len))
-    target = torch.randint(0, pt_tokenizer.vocab_size, (1, pt_tokenizer.max_len - 1))
+    source = torch.randint(0, en_tokenizer.vocab_size, (1, en_tokenizer.max_seq_len))
+    target = torch.randint(0, pt_tokenizer.vocab_size, (1, pt_tokenizer.max_seq_len - 1))
 
     onnx_location = os.path.join(location, "transformer.onnx")
     torch.onnx.export(
@@ -156,7 +156,7 @@ if __name__ == "__main__":
     parser.add_argument("--pt-train", required=True)
     parser.add_argument("--pt-val", required=True)
     parser.add_argument("--pt-test", required=True)
-    parser.add_argument("--max-len", type=int, default=64)
+    parser.add_argument("--max-seq-len", type=int, default=64)
     parser.add_argument("--model-dim", type=int, default=256)
     parser.add_argument("--num-heads", type=int, default=4)
     parser.add_argument("--num-layers", type=int, default=3)
@@ -167,8 +167,8 @@ if __name__ == "__main__":
     parser.add_argument("--debug", action="store_true")
     args = parser.parse_args()
 
-    en_tokenizer = TextTokenizer.from_file(path=args.en_tokenizer, default_max_len=args.max_len)
-    pt_tokenizer = TextTokenizer.from_file(path=args.pt_tokenizer, default_max_len=args.max_len)
+    en_tokenizer = TextTokenizer.from_file(path=args.en_tokenizer, default_max_seq_len=args.max_seq_len)
+    pt_tokenizer = TextTokenizer.from_file(path=args.pt_tokenizer, default_max_seq_len=args.max_seq_len)
 
     train_ds = TranslationDataset(
         src_file=args.en_train,
@@ -196,7 +196,7 @@ if __name__ == "__main__":
     transformer = Transformer(
         source_vocab_size=en_tokenizer.vocab_size,
         target_vocab_size=pt_tokenizer.vocab_size,
-        seq_length=en_tokenizer.max_len,
+        seq_length=en_tokenizer.max_seq_len,
         model_dim=args.model_dim,
         num_heads=args.num_heads,
         num_layers=args.num_layers,
