@@ -106,8 +106,10 @@ impl ModelPlugin for TranslationPlugin {
         let mut ids = vec![start_id];
 
         while ids.len() < max_seq_len && last_id != end_id {
+            let mut padded = vec![0; 127];
+            padded[..ids.len()].copy_from_slice(&ids);
             let target =
-                Tensor::<Flex, 1, Int>::from_data(TensorData::from(&ids[..]), &self.device)
+                Tensor::<Flex, 1, Int>::from_data(TensorData::from(&padded[..]), &self.device)
                     .unsqueeze::<2>();
             let target_len = ids.len();
             // [1, target_len, vocab_size]

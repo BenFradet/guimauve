@@ -122,7 +122,9 @@ def save_onnx(
     model.eval()
 
     source = torch.randint(0, en_tokenizer.vocab_size, (1, en_tokenizer.max_seq_len))
-    target = torch.randint(0, pt_tokenizer.vocab_size, (1, pt_tokenizer.max_seq_len - 1))
+    target = torch.randint(
+        0, pt_tokenizer.vocab_size, (1, pt_tokenizer.max_seq_len - 1)
+    )
 
     onnx_location = os.path.join(location, "transformer.onnx")
     torch.onnx.export(
@@ -164,8 +166,12 @@ if __name__ == "__main__":
     parser.add_argument("--debug", action="store_true")
     args = parser.parse_args()
 
-    en_tokenizer = TextTokenizer.from_file(path=args.en_tokenizer, default_max_seq_len=args.max_seq_len)
-    pt_tokenizer = TextTokenizer.from_file(path=args.pt_tokenizer, default_max_seq_len=args.max_seq_len)
+    en_tokenizer = TextTokenizer.from_file(
+        path=args.en_tokenizer, default_max_seq_len=args.max_seq_len
+    )
+    pt_tokenizer = TextTokenizer.from_file(
+        path=args.pt_tokenizer, default_max_seq_len=args.max_seq_len
+    )
 
     train_ds = TranslationDataset(
         src_file=args.en_train,
