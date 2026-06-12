@@ -4,6 +4,7 @@ use anyhow::Result;
 use axum::{
     Router,
     extract::{self, State},
+    http::StatusCode,
     routing::post,
 };
 use example::{TranslationPlugin, TranslationRequest, TranslationResponse};
@@ -34,10 +35,13 @@ async fn main() -> Result<()> {
 async fn infer(
     State(plugin): State<Arc<TranslationPlugin>>,
     extract::Json(payload): extract::Json<TranslationRequest>,
-) -> extract::Json<TranslationResponse> {
-    // TODO: 
-    let input = plugin.pre(payload).unwrap();
-    let output = plugin.infer(input).unwrap();
-    let response = plugin.post(output).unwrap();
-    extract::Json(response)
+) -> Result<extract::Json<TranslationResponse>, (StatusCode, String)> {
+    let input = plugin.pre(payload).map_err(internal_server_error)?;
+    let output = plugin.infer(input).map_err(internal_server_error)?;
+    let response = plugin.post(output).map_err(internal_server_error)?;
+    Ok(extract::Json(response))
+}
+
+fn internal_server_error(e: anyhow::Error) -> (StatusCode, String) {
+    (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
 }
