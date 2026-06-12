@@ -30,3 +30,7 @@ uv run -m train.train_transformer \
     --output-dir ../models/pt_to_en \
     --debug
 ```
+
+## Todo
+
+- https://huggingface.co/blog/atharv6f/autoregressive-loop

@@ -115,13 +115,10 @@ def debug(
 
 def save_onnx(
     model: nn.Module,
-    model_filename: str,
     location: str,
     en_tokenizer: TextTokenizer,
     pt_tokenizer: TextTokenizer,
 ) -> None:
-    checkpoint = torch.load(os.path.join(location, model_filename))
-    model.load_state_dict(checkpoint["model"])
     model.eval()
 
     source = torch.randint(0, en_tokenizer.vocab_size, (1, en_tokenizer.max_seq_len))
@@ -270,9 +267,10 @@ if __name__ == "__main__":
                 {"epoch": epoch_i, "model": transformer.state_dict()},
                 model_location,
             )
-            print(f"saved a new model at {model_location}")
+            print(f"saved an improved model at {model_location}")
         else:
             no_improvement_counter += 1
+            print(f"no improvements for {no_improvement_counter} epochs")
 
         with open(train_log_file, "a") as train_log, open(val_log_file, "a") as val_log:
             train_log.write(f"{epoch_i}, {train_loss:8.3f}, {train_accuracy:8.3f}\n")
@@ -292,6 +290,10 @@ if __name__ == "__main__":
             )
             break
 
+    # load best model before test
+    checkpoint = torch.load(os.path.join(args.output_dir, model_filename))
+    transformer.load_state_dict(checkpoint["model"])
+
     start_time = time.time()
     test_loss, test_accuracy = epoch(transformer, test_dl, scheduler, training=False)
     debug(
@@ -303,7 +305,6 @@ if __name__ == "__main__":
 
     save_onnx(
         model=transformer,
-        model_filename=model_filename,
         location=args.output_dir,
         en_tokenizer=en_tokenizer,
         pt_tokenizer=pt_tokenizer,
