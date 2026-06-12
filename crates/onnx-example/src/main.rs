@@ -25,6 +25,7 @@ async fn main() -> Result<()> {
 
     let listener = TcpListener::bind("0.0.0.0:3000").await?;
     tracing::debug!("listening on {}", listener.local_addr()?);
+    println!("listening on {}", listener.local_addr()?);
     let _ = axum::serve(listener, app).await;
 
     Ok(())
@@ -34,6 +35,7 @@ async fn infer(
     State(plugin): State<Arc<TranslationPlugin>>,
     extract::Json(payload): extract::Json<TranslationRequest>,
 ) -> extract::Json<TranslationResponse> {
+    // TODO: 
     let input = plugin.pre(payload).unwrap();
     let output = plugin.infer(input).unwrap();
     let response = plugin.post(output).unwrap();

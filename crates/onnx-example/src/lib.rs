@@ -54,18 +54,23 @@ impl TranslationPlugin {
         })
     }
 
-    fn encode_src(&self, en_sentence: &str) -> Result<Tensor<Flex, 2, Int>> {
-        self.encode(&self.en_tokenizer, en_sentence)
-    }
-
-    fn encode(&self, tokenizer: &Tokenizer, sentence: &str) -> Result<Tensor<Flex, 2, Int>> {
-        let tokenized = tokenizer.encode(sentence, false).map_err(Error::msg)?;
-        let ids = tokenized.get_ids();
+    fn encode(&self, sentence: &str) -> Result<Tensor<Flex, 2, Int>> {
+        let tokenized = self
+            .en_tokenizer
+            .encode(sentence, false)
+            .map_err(Error::msg)?;
+        let ids: Vec<i32> = tokenized.get_ids().iter().map(|&id| id as i32).collect();
         Ok(
-            Tensor::<Flex, 1, Int>::from_data(TensorData::from(ids), &self.device)
+            Tensor::<Flex, 1, Int>::from_data(TensorData::from(&ids[..]), &self.device)
                 // model is expecting [batch, seq_len], here [1, seq_len]
                 .unsqueeze::<2>(),
         )
+    }
+
+    fn decode(&self, token_ids: Tensor<Flex, 1, Int>) -> Result<String> {
+        let data: Vec<i32> = token_ids.to_data().into_vec()?;
+        let ids: Vec<u32> = data.iter().map(|&id| id as u32).collect();
+        self.pt_tokenizer.decode(&ids, true).map_err(Error::msg)
     }
 }
 
@@ -77,7 +82,7 @@ impl ModelPlugin for TranslationPlugin {
     type ModelOutput = TranslationModelOutput;
 
     fn pre(&self, req: Self::Request) -> Result<Self::ModelInput, Self::Error> {
-        let input_tensor = self.encode_src(&req.en_sentence)?;
+        let input_tensor = self.encode(&req.en_sentence)?;
         Ok(TranslationModelInput {
             source_token_ids: input_tensor,
         })
@@ -89,11 +94,11 @@ impl ModelPlugin for TranslationPlugin {
         let start_id = self
             .pt_tokenizer
             .token_to_id("[START]")
-            .context("couldn't convert [START]")?;
+            .context("couldn't convert [START]")? as i32;
         let end_id = self
             .pt_tokenizer
             .token_to_id("[END]")
-            .context("couldn't convert [END]")?;
+            .context("couldn't convert [END]")? as i32;
 
         let vocab_size = self.pt_tokenizer.get_vocab_size(false);
         let max_seq_len = self
@@ -106,7 +111,7 @@ impl ModelPlugin for TranslationPlugin {
         let mut ids = vec![start_id];
 
         while ids.len() < max_seq_len && last_id != end_id {
-            let mut padded = vec![0; 127];
+            let mut padded = vec![0i32; max_seq_len - 1];
             padded[..ids.len()].copy_from_slice(&ids);
             let target =
                 Tensor::<Flex, 1, Int>::from_data(TensorData::from(&padded[..]), &self.device)
@@ -116,7 +121,7 @@ impl ModelPlugin for TranslationPlugin {
             let logits = self.model.forward(input.source_token_ids.clone(), target);
             // logits for the last token [1, 1, vocab_size]
             let last_logits = logits.slice([0..1, (target_len - 1)..target_len, 0..vocab_size]);
-            let next_token_id = last_logits.argmax(2).into_scalar() as u32;
+            let next_token_id = last_logits.argmax(2).into_scalar() as i32;
             last_id = next_token_id;
             ids.push(next_token_id);
         }
@@ -128,10 +133,7 @@ impl ModelPlugin for TranslationPlugin {
     }
 
     fn post(&self, output: Self::ModelOutput) -> Result<Self::Response, Self::Error> {
-        let data = output.predicted_token_ids.to_data().into_vec()?;
-        let decoded = self.pt_tokenizer.decode(&data, true).map_err(Error::msg)?;
-        Ok(TranslationResponse {
-            pt_sentence: decoded,
-        })
+        let pt_sentence = self.decode(output.predicted_token_ids)?;
+        Ok(TranslationResponse { pt_sentence })
     }
 }
