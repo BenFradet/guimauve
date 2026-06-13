@@ -5,20 +5,20 @@ from typing import Any
 import torch
 
 
-def extract_dict(model: torch.nn.Module, extracts: list[str], output_dir: str) -> list[str]:
+def extract_dict(model: torch.nn.Module, dicts: list[str], output_dir: str) -> list[str]:
     """
     Extracts a dict from the model object
 
     Parameters:
     model (torch.nn.Module): loaded pytorch model
-    extracts (list[str]): the dicts to extract from the model in dotted-path format
+    dicts (list[str]): the dicts to extract from the model in dotted-path format
     output_dir (str): the directory in which to store the jsons
 
     Returns:
     the paths to the json files
     """
     res = []
-    for dotted_path in extracts:
+    for dotted_path in dicts:
         file_path = os.path.join(output_dir, f"{dotted_path}.json")
         with open(file_path, "w") as f:
             data = deep_getattr(model, dotted_path)
