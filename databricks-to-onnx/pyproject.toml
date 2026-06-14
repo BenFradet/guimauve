@@ -13,6 +13,7 @@ dependencies = [
     "onnx>=1.14.0,<1.17",
     "onnxruntime>=1.25.1",
     "onnxsim @ git+https://github.com/BenFradet/onnxsim@fix-version",
+    "safetensors>=0.8.0",
     "torch>=2.1.0",
 ]
 

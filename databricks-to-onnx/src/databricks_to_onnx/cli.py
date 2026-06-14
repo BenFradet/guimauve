@@ -3,7 +3,7 @@ import os
 import click
 
 from databricks_to_onnx.converter import convert_model, load_model
-from databricks_to_onnx.extractor import extract_dict
+from databricks_to_onnx.extractor import extract_dict, extract_embedding
 
 
 @click.command()
@@ -38,9 +38,9 @@ from databricks_to_onnx.extractor import extract_dict
     "embeddings",
     required=False,
     multiple=True,
-    help="""Extract embeddings from a nn.ModuleDict you want to get out of the model, as a
-    safetensors file, in dotted path format, e.g. "embeddings.input". Will be written out as
-    "embeddings.input.safetensors" in the output directory. Repeatable.""",
+    help="""Extract embeddings from a nn.ModuleDict as a safetensors file, in dotted path
+    format, e.g. "embeddings.input". Will be written out as "embeddings.input.safetensors" in the
+    output directory. Repeatable.""",
 )
 @click.option(
     "-o",
@@ -67,6 +67,8 @@ def cli(
     embedding_list = list(embeddings)
     if embedding_list:
         click.echo("Extracting embeddings:")
+        for extracted in extract_embedding(pytorch_model, embedding_list, output_dir):
+            click.echo(f"- {extracted}")
 
     click.echo("Exporting to ONNX")
     convert_model(pytorch_model, list(input_tensor_schemas), output_dir)
