@@ -29,6 +29,17 @@ def extract_dict(model: torch.nn.Module, dicts: list[str], output_dir: str) -> l
 
 
 def extract_embedding(model: torch.nn.Module, embeddings: list[str], output_dir: str) -> list[str]:
+    """
+    Extracts tensors from the model object as safetensors files
+
+    Parameters:
+    model (torch.nn.Module): loaded pytorch model
+    embeddings (list[str]): the tensors to extract from the model in dotted-path format
+    output_dir (str): the directory in which to store the safetensors files
+
+    Returns:
+    the paths to the safetensors files
+    """
     res = []
     for dotted_path in embeddings:
         file_path = os.path.join(output_dir, f"{dotted_path}.safetensors")

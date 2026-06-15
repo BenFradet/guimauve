@@ -38,9 +38,9 @@ from databricks_to_onnx.extractor import extract_dict, extract_embedding
     "embeddings",
     required=False,
     multiple=True,
-    help="""Extract embeddings from a nn.ModuleDict as a safetensors file, in dotted path
-    format, e.g. "embeddings.input". Will be written out as "embeddings.input.safetensors" in the
-    output directory. Repeatable.""",
+    help="""Extract embeddings from a nn.Module or nn.ModuleDict as a safetensors file, in dotted
+    path format, e.g. "embeddings.input". Will be written out as "embeddings.input.safetensors" in
+    the output directory. Repeatable.""",
 )
 @click.option(
     "-o",
