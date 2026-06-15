@@ -33,9 +33,14 @@ def extract_embedding(model: torch.nn.Module, embeddings: list[str], output_dir:
     for dotted_path in embeddings:
         file_path = os.path.join(output_dir, f"{dotted_path}.safetensors")
         weights = {}
-        module_dict = _deep_getattr(model, dotted_path)
-        for name, module in module_dict.items():
-            weights[name] = module.weight.detach()
+        module = _deep_getattr(model, dotted_path)
+        if isinstance(module, torch.nn.ModuleDict):
+            for name, child in module.items():
+                weights[name] = child.weight.data
+        elif isinstance(module, torch.nn.Module):
+            weights[dotted_path.split(".")[-1]] = module.weight.data
+        else:
+            raise TypeError(f"'{dotted_path}' is not a nn.Module nor a nn.ModuleDict")
         save_file(weights, file_path)
         res.append(file_path)
 
