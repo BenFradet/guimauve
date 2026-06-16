@@ -4,4 +4,10 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+anyhow = { version = "1.0", optional = true }
+burn = { version = "0.21.0", features = ["flex"], optional = true }
+burn-store = { version = "0.21.0", optional = true }
 serde = "1.0.228"
+
+[features]
+store = ["dep:burn", "dep:burn-store", "dep:anyhow"]
