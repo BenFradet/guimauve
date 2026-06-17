@@ -5,9 +5,14 @@ edition = "2024"
 
 [dependencies]
 anyhow = { version = "1.0", optional = true }
+axum = { version = "0.8.9", optional = true }
 burn = { version = "0.21.0", features = ["flex"], optional = true }
 burn-store = { version = "0.21.0", optional = true }
 serde = "1.0.228"
+tokio = { version = "1.52.3", features = ["full"], optional = true }
+tracing = { version = "0.1.44", optional = true }
 
 [features]
-store = ["dep:burn", "dep:burn-store", "dep:anyhow"]
+default = ["server", "store"]
+store = ["dep:anyhow", "dep:burn", "dep:burn-store"]
+server = ["dep:anyhow", "dep:axum", "dep:tokio", "dep:tracing"]
