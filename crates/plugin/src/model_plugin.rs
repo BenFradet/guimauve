@@ -1,9 +1,9 @@
 use serde::{Serialize, de::DeserializeOwned};
 
-pub trait ModelPlugin {
+pub trait ModelPlugin: Send + Sync + 'static {
     // c.f. https://serde.rs/lifetimes.html#trait-bounds
-    type Request: DeserializeOwned;
-    type Response: Serialize;
+    type Request: DeserializeOwned + Send + 'static;
+    type Response: Serialize + Send + 'static;
     type ModelInput;
     type ModelOutput;
     type Error: std::fmt::Display;
