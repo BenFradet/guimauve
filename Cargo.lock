@@ -4317,12 +4317,17 @@ name = "my-model"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "axum",
  "burn",
  "burn-onnx",
  "burn-store",
  "plugin",
  "serde",
  "serde_json",
+ "tokenizers 0.23.1",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
 ]
 
 [[package]]
