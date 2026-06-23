@@ -1,5 +1,4 @@
 FROM lukemathwalker/cargo-chef:0.1.77-rust-1.96.0-trixie-slim AS chef
-ARG CRATE_NAME
 WORKDIR /build
 
 FROM chef AS planner
@@ -19,7 +18,9 @@ RUN cargo build --locked --release -p ${CRATE_NAME} && \
 # TODO: config, logs, https
 # c.f. https://github.com/hseeberger/hello-rs/blob/main/Dockerfile
 FROM debian:trixie-slim AS runtime
+ARG ARTIFACTS_DIR
 COPY --from=builder --chown=10001:10001 /runtime /
+COPY --chown=10001:10001 ${ARTIFACTS_DIR} /artifacts
 USER 10001:10001
 EXPOSE 3000
 CMD ["server"]
