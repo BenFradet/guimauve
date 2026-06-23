@@ -2660,24 +2660,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "example"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "axum",
- "burn",
- "burn-onnx",
- "burn-store",
- "plugin",
- "serde",
- "serde_json",
- "tokenizers 0.23.1",
- "tokio",
- "tracing",
- "tracing-subscriber",
-]
-
-[[package]]
 name = "exr"
 version = "1.74.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3285,19 +3267,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fdf242682df893b86f33a73828fb09ca4b2d3bb6cc95249707fc684d27484b91"
 dependencies = [
  "bitflags 2.11.1",
-]
-
-[[package]]
-name = "guimauve"
-version = "0.1.0"
-dependencies = [
- "axum",
- "burn",
- "burn-onnx",
- "burn-store",
- "tokio",
- "tracing",
- "tracing-subscriber",
 ]
 
 [[package]]
@@ -4735,6 +4704,24 @@ checksum = "1e68317604e77e53b85896388e1a803c1d21b74c899ec9e5e1112db90735edd7"
 dependencies = [
  "cc",
  "pkg-config",
+]
+
+[[package]]
+name = "onnx-example"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "axum",
+ "burn",
+ "burn-onnx",
+ "burn-store",
+ "plugin",
+ "serde",
+ "serde_json",
+ "tokenizers 0.23.1",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
 ]
 
 [[package]]

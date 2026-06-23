@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use anyhow::Result;
-use example::TranslationPlugin;
+use onnx_example::TranslationPlugin;
 
 #[tokio::main]
 async fn main() -> Result<()> {
