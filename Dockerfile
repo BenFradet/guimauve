@@ -1,4 +1,4 @@
-FROM lukemathwalker/cargo-chef:0.1.77-rust-1.96.0-trixie-slim AS chef
+FROM lukemathwalker/cargo-chef:0.1.77-rust-1.96.0-trixie AS chef
 WORKDIR /build
 
 FROM chef AS planner
@@ -9,6 +9,7 @@ FROM chef AS builder
 ARG CRATE_NAME
 SHELL ["/bin/bash", "-c"]
 COPY --from=planner /build/recipe.json recipe.json
+COPY burn-onnx burn-onnx
 RUN cargo chef cook --profile release --recipe-path recipe.json -p ${CRATE_NAME}
 COPY . .
 RUN cargo build --locked --release -p ${CRATE_NAME} && \

@@ -5,3 +5,5 @@ __pycache__
 models/*
 datasets/*
 crates/my-model/*
+
+burn-onnx/
