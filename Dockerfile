@@ -9,7 +9,6 @@ FROM chef AS builder
 ARG CRATE_NAME
 SHELL ["/bin/bash", "-c"]
 COPY --from=planner /build/recipe.json recipe.json
-COPY burn-onnx burn-onnx
 RUN cargo chef cook --profile release --recipe-path recipe.json -p ${CRATE_NAME}
 COPY . .
 RUN cargo build --locked --release -p ${CRATE_NAME} && \

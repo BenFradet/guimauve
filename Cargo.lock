@@ -895,6 +895,8 @@ dependencies = [
 [[package]]
 name = "burn-onnx"
 version = "0.21.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bfabfbc04b44ab0bdfced044bb823e60d614b68a0ebccd0c4fe9fff76c7c6540"
 dependencies = [
  "burn",
  "burn-store",
@@ -4733,6 +4735,8 @@ dependencies = [
 [[package]]
 name = "onnx-ir"
 version = "0.21.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "676d0888e988bdeb7b7598fec5a83f493e91139d513677304e6f67a894926862"
 dependencies = [
  "burn-tensor",
  "bytemuck",
@@ -4752,6 +4756,8 @@ dependencies = [
 [[package]]
 name = "onnx-ir-derive"
 version = "0.21.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6972f2dcc538c2ade166f24599518f36dae540c2e16701c60445cf8e911de3a9"
 dependencies = [
  "proc-macro2",
  "quote",
