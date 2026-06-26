@@ -13,8 +13,11 @@ RUN cargo chef cook --profile release --recipe-path recipe.json -p ${CRATE_NAME}
 COPY . .
 RUN cargo build --locked --release -p ${CRATE_NAME} && \
   mkdir -p /runtime/usr/local/bin && \
-  mv "./target/release/${CRATE_NAME}" /runtime/usr/local/bin/server && \
-  find target/release/build -name "*.bpk" -exec cp --parents {} /runtime \;
+  mv "./target/release/${CRATE_NAME}" /runtime/usr/local/bin/server
+
+# bpk path is hardcoded in rs file so we need to reproduce the expected hierarchy
+RUN mkdir -p /runtime/build/target/release/build && \
+    find /build/target/release/build -name "*.bpk" -exec cp --parents {} /runtime \;
 
 # TODO: config, logs, https
 # c.f. https://github.com/hseeberger/hello-rs/blob/main/Dockerfile
