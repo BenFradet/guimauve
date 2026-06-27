@@ -7,7 +7,7 @@ use axum::{
     http::StatusCode,
     routing::post,
 };
-use tokio::net::TcpListener;
+use tokio::{net::TcpListener, signal};
 
 use crate::model_plugin::ModelPlugin;
 
@@ -18,7 +18,9 @@ pub async fn serve<P: ModelPlugin>(plugin: P, addr: &str) -> Result<()> {
         .with_state(plugin);
     let listener = TcpListener::bind(addr).await?;
     tracing::info!("listening on {}", listener.local_addr()?);
-    axum::serve(listener, app).await?;
+    axum::serve(listener, app)
+        .with_graceful_shutdown(shutdown_signal())
+        .await?;
     Ok(())
 }
 
@@ -34,4 +36,24 @@ async fn infer<P: ModelPlugin>(
 
 fn internal_server_error<E: std::fmt::Display>(e: E) -> (StatusCode, String) {
     (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+}
+
+async fn shutdown_signal() {
+    let ctrl_c = async {
+        signal::ctrl_c()
+            .await
+            .expect("failed to install ctrl+c handler");
+    };
+
+    let terminate = async {
+        signal::unix::signal(signal::unix::SignalKind::terminate())
+            .expect("failed to install SIGTERM handler")
+            .recv()
+            .await;
+    };
+
+    tokio::select! {
+        _ = ctrl_c => {},
+        _ = terminate => {},
+    }
 }
