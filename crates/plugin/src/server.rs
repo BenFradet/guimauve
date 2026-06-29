@@ -5,7 +5,7 @@ use axum::{
     Router,
     extract::{self, State},
     http::StatusCode,
-    routing::post,
+    routing::{get, post},
 };
 use tokio::{net::TcpListener, signal};
 
@@ -15,6 +15,7 @@ pub async fn serve<P: ModelPlugin>(plugin: P, addr: &str) -> Result<()> {
     let plugin = Arc::new(plugin);
     let app = Router::new()
         .route("/infer", post(infer::<P>))
+        .route("/health", get(|| async { StatusCode::OK }))
         .with_state(plugin);
     let listener = TcpListener::bind(addr).await?;
     tracing::info!("listening on {}", listener.local_addr()?);
