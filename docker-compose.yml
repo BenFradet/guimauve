@@ -2,6 +2,8 @@ services:
   cadvisor:
     image: ghcr.io/google/cadvisor:0.60.3
     container_name: cadvisor
+    command: ["-port", "8081"]
+    network_mode: "host"
     privileged: true
     pid: "host"
     devices:
@@ -13,8 +15,7 @@ services:
       - /var/lib/docker:/var/lib/docker:ro
       - /dev/disk:/dev/disk:ro
       - /cgroup:/cgroup:ro
-    ports:
-      - "8081:8080"
+      - /dev/mapper:/dev/mapper:ro
     deploy:
       resources:
         limits:
