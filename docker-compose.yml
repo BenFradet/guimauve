@@ -2,10 +2,14 @@ services:
   cadvisor:
     image: ghcr.io/google/cadvisor:0.60.3
     container_name: cadvisor
-    command: ["-port", "8081"]
     network_mode: "host"
     privileged: true
     pid: "host"
+    command:
+      - --port=8081
+      - --docker_only=true
+      - --housekeeping_interval=2s
+      - --disable_metrics=percpu,sched,tcp,udp,diskIO,hugetlb,referenced_memory
     devices:
       - /dev/kmsg:/dev/kmsg
     volumes:
