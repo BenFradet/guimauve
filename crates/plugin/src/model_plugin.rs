@@ -6,7 +6,7 @@ pub trait ModelPlugin: Send + Sync + 'static {
     type Response: Serialize + Send + 'static;
     type ModelInput;
     type ModelOutput;
-    type Error: std::fmt::Display;
+    type Error: std::fmt::Display + Send;
 
     fn pre(&self, req: Self::Request) -> Result<Self::ModelInput, Self::Error>;
     fn infer(&self, input: Self::ModelInput) -> Result<Self::ModelOutput, Self::Error>;

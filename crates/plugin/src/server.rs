@@ -7,7 +7,7 @@ use axum::{
     http::StatusCode,
     routing::{get, post},
 };
-use tokio::{net::TcpListener, signal};
+use tokio::{net::TcpListener, signal, task};
 
 use crate::model_plugin::ModelPlugin;
 
@@ -29,9 +29,18 @@ async fn infer<P: ModelPlugin>(
     State(plugin): State<Arc<P>>,
     extract::Json(payload): extract::Json<P::Request>,
 ) -> Result<extract::Json<P::Response>, (StatusCode, String)> {
-    let input = plugin.pre(payload).map_err(internal_server_error)?;
-    let output = plugin.infer(input).map_err(internal_server_error)?;
-    let response = plugin.post(output).map_err(internal_server_error)?;
+    // this is heavily cpu bound, hence spawn_blocking
+    let response = task::spawn_blocking(move || {
+        let input = plugin.pre(payload)?;
+        let output = plugin.infer(input)?;
+        plugin.post(output)
+    })
+    .await
+    // in case of join errors
+    .map_err(internal_server_error)?
+    // plugin errors
+    .map_err(internal_server_error)?;
+
     Ok(extract::Json(response))
 }
 
