@@ -1,5 +1,21 @@
 # c.f. https://www.dash0.com/guides/cadvisor-docker-monitoring
 services:
+  guimauve:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        CRATE_NAME: ${CRATE_NAME}
+        ARTIFACTS_DIR: ${ARTIFACTS_DIR}
+    container_name: guimauve
+    network_mode: host
+    deploy:
+      resources:
+        limits:
+          memory: 4608M
+          cpus: "3.0"
+    restart: unless-stopped
+
   cadvisor:
     image: ghcr.io/google/cadvisor:0.60.3
     container_name: cadvisor
