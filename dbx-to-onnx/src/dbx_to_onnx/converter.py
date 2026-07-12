@@ -5,7 +5,7 @@ import onnx
 import torch
 from onnxsim import simplify
 
-from databricks_to_onnx.input_tensor_schema import InputTensorSchema
+from dbx_to_onnx.input_tensor_schema import InputTensorSchema
 
 
 def load_model(model_location: str) -> torch.nn.Module:

@@ -9,7 +9,7 @@ git clone https://github.com/BenFradet/guimauve
 ```
 
 ```bash
-Usage: databricks-to-onnx [OPTIONS]
+Usage: dbx-to-onnx [OPTIONS]
 
 Options:
   -m, --model-location TEXT       Unity Catalog model URI, e.g. "models:/catal
@@ -33,7 +33,7 @@ Then, run the cli:
 ```bash
 DATABRICKS_HOST=https://{workspace-id}.cloud.databricks.com \
 DATABRICKS_TOKEN={PAT} \
-uv run databricks-to-onnx \
+uv run dbx-to-onnx \
   -m "models:/catalog.schema.model_name@alias" \
   -i "a:float32:1,100" \
   -i "b:int64:10,50,3" \
@@ -47,7 +47,7 @@ First, move all MLflow model artifacts to a folder, e.g. `models/model-v1/`.
 Then, run the cli:
 
 ```bash
-uv run databricks-to-onnx \
+uv run dbx-to-onnx \
   -m "models/model-v1/" \
   -i "a:float32:1,100" \
   -i "b:int64:10,50,3" \
@@ -63,7 +63,7 @@ those classes to be importable.
 As a result, you'll need to install the cli directly where the model definition is:
 
 ```bash
-uv add --dev --editable {clone-dir}/guimauve/databricks-to-onnx
+uv add --dev --editable {clone-dir}/guimauve/dbx-to-onnx
 ```
 
 And repeat the above.

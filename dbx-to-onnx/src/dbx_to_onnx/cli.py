@@ -2,8 +2,8 @@ import os
 
 import click
 
-from databricks_to_onnx.converter import convert_model, load_model
-from databricks_to_onnx.extractor import extract_dict, extract_embedding
+from dbx_to_onnx.converter import convert_model, load_model
+from dbx_to_onnx.extractor import extract_dict, extract_embedding
 
 
 @click.command()
