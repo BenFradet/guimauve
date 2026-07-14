@@ -2,25 +2,22 @@ This is a small CLI to convert PyTorch models saved with MLflow to ONNX.
 
 # Usage
 
-Clone this project:
-
-```bash
-git clone https://github.com/BenFradet/guimauve
-```
-
 ```bash
 Usage: dbx-to-onnx [OPTIONS]
 
 Options:
-  -m, --model-location TEXT       Unity Catalog model URI, e.g. "models:/catal
-                                  og.schema.model_name@champion", or local
-                                  directory, e.g. "path/to/champion/"
+  -m, --model-location TEXT       Unity Catalog model URI, e.g. "models:/catalog.schema.model_name@champion", or local directory, e.g. "path/to/champion/"
                                   [required]
-  -i, --input-tensor-schema TEXT  Input tensor schema as
-                                  "name:dtype:dim1,dim2". Repeatable.
+  -i, --input-tensor-schema TEXT  Input tensor schema as "name:dtype:dim1,dim2".
+                                  Repeatable.
                                   [required]
-  -o, --output-path TEXT          Output path for the .onnx file.  [required]
-  --help                          Show this message and exit.
+  -d, --dict TEXT                 Extract a dict you want to get out of the model in dotted path format, e.g. "maps.vocab".
+                                  Will be written out as "maps.vocab.json" in the output directory.
+                                  Repeatable.
+  -e, --embedding TEXT            Extract embeddings from a nn.Module or nn.ModuleDict as a safetensors file, in dotted path format, e.g. "embeddings.input".
+                                  Will be written out as "embeddings.input.safetensors" in the output directory.
+                                  Repeatable.
+  -o, --output-dir TEXT           Output dir for the model.onnx file.
 ```
 
 ## Loading a model from databricks

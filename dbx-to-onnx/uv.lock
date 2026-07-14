@@ -636,7 +636,7 @@ wheels = [
 ]
 
 [[package]]
-name = "databricks-to-onnx"
+name = "dbx-to-onnx"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
