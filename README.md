@@ -6,6 +6,13 @@
 
 `guimauve`, French for marshmallow, is an inference server built on top of [burn](https://github.com/tracel-ai/burn).
 
+## Quickstart
+
+This is a small tutorial to run an inference server on an English to Portuguese translation model.
+
+Download the datasets from `https://web.archive.org/web/20240301220426if_/http://www.phontron.com/data/qi18naacl-dataset.tar.gz`
+and extract them. We only care about the `pt_to_en` folder.
+
 ```bash
 docker build \
     --build-arg CRATE_NAME=onnx-example \
