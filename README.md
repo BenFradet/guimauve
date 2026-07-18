@@ -34,6 +34,32 @@ This will create a `pt_tokenizer.json` file.
 
 Same thing for the English data which will create a `en_tokenizer.json` file.
 
+### Train the transformer model
+
+From the `python-onnx-example` folder, run:
+
+```bash
+uv run \
+    -m train.train_transformer \
+    --en-tokenizer models/pt_to_en/en_tokenizer.json \
+    --en-train datasets/pt_to_en/en.train \
+    --en-val datasets/pt_to_en/en.dev \
+    --en-test datasets/pt_to_en/en.test \
+    --pt-tokenizer models/pt_to_en/pt_tokenizer.json \
+    --pt-train datasets/pt_to_en/pt.train \
+    --pt-val datasets/pt_to_en/pt.dev \
+    --pt-test datasets/pt_to_en/pt.test \
+    --output-dir models/pt_to_en \
+    --debug
+```
+
+This might take a while depending on your computer specs.
+This will output a `transformer.onnx` file.
+
+### Building the inference server docker image
+
+Modify ./crates/onnx-example/build.rs and point the path to where your `transformer.onnx` file is
+located.
 
 Build the Docker image, `ARTIFACTS_DIR` should contain the tokenizer files built previously. 
 
