@@ -70,12 +70,32 @@ docker build \
     -t onnx-example .
 ```
 
+### Run the Docker container
+
 ```bash
 docker run -p 3000:3000 --name onnx-example onnx-example
 ```
+
+Check it's working:
+
+```bash
+curl -X POST localhost:3000/infer \
+    -H 'Content-Type: application/json' \
+    -d '{"en_sentence": "why are people from Lisboa eating snails?"}'
+```
+
+### Docker compose set up
+
+There is also a Docker compose set up with:
+
+- [cadvisor](https://github.com/google/cadvisor) for resource usage monitoring
+- [prometheus](https://github.com/prometheus/prometheus) for the time series database set up to scrape cadvisor
+- [grafana](https://github.com/grafana/grafana) to display the data in prometheus in a dashboard
 
 ```
 CRATE_NAME=onnx-example \
   ARTIFACTS_DIR=models/pt_to_en \
   docker compose up --force-recreate --remove-orphans --detach --build guimauve
 ```
+
+You can check the Grafana dashboard at `http://localhost:8083/`.
