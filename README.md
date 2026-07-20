@@ -99,3 +99,20 @@ CRATE_NAME=onnx-example \
 ```
 
 You can check the Grafana dashboard at `http://localhost:8083/`.
+
+## dbx-to-onnx
+
+If you have a model already saved locally or in Databricks using MLflow, this repository offers
+a small utility to convert it to ONNX:
+
+```bash
+uv run dbx-to-onnx \
+    -m models/pt_to_en \
+    -i "source:int64:1,128" \
+    -i "target:int64:1,127" \
+    -o models/pt_to_en
+```
+
+This will create a `model.onnx` file in the specified output directory.
+
+There is more information in the dedicated [README](./dbx-to-onnx/README.md).
