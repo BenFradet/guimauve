@@ -1,7 +1,7 @@
 <h2 align="center">
-  <img src="logo.png" alt="log" width="100" height="100"/>
+  <img src="logo.png" alt="log" width="200" height="200"/>
   <br>
-  allumette
+  guimauve
 </h2>
 
 `guimauve`, French for marshmallow, is an inference server built on top of [burn](https://github.com/tracel-ai/burn).
