@@ -1,5 +1,5 @@
 <h2 align="center">
-  <img src="logo.png" alt="log" width="200" height="200"/>
+  <img src="logo.png" alt="log" width="212" height="350"/>
   <br>
   guimauve
 </h2>
@@ -7,6 +7,12 @@
 `guimauve`, French for marshmallow, is an inference server built on top of [burn](https://github.com/tracel-ai/burn).
 
 ## Quickstart
+
+TODO
+
+You can check the tutorial below for a full-fledged example.
+
+## Tutorial
 
 This is a small tutorial to run an inference server on an English to Portuguese translation model.
 
