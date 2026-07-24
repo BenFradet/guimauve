@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
 
 use anyhow::Result;
 use axum::{
@@ -7,9 +7,12 @@ use axum::{
     http::StatusCode,
     routing::{get, post},
 };
-use tokio::{net::TcpListener, signal, task};
+use tokio::{net::TcpListener, signal, sync::Semaphore, task};
 
 use crate::model_plugin::ModelPlugin;
+
+// c.f. https://docs.rs/tokio/latest/tokio/sync/struct.Semaphore.html#limit-the-number-of-incoming-requests-being-handled-at-the-same-time
+static SEMAPHORE: OnceLock<Semaphore> = OnceLock::new();
 
 pub async fn serve<P: ModelPlugin>(plugin: P, addr: &str) -> Result<()> {
     let plugin = Arc::new(plugin);
@@ -25,10 +28,18 @@ pub async fn serve<P: ModelPlugin>(plugin: P, addr: &str) -> Result<()> {
     Ok(())
 }
 
+pub fn set_max_concurrency(n: usize) {
+    SEMAPHORE.get_or_init(|| Semaphore::new(n));
+}
+
 async fn infer<P: ModelPlugin>(
     State(plugin): State<Arc<P>>,
     extract::Json(payload): extract::Json<P::Request>,
 ) -> Result<extract::Json<P::Response>, (StatusCode, String)> {
+    let _permit = match SEMAPHORE.get() {
+        Some(sem) => sem.acquire().await.ok(),
+        None => None,
+    };
     // this is heavily cpu bound, hence spawn_blocking
     let response = task::spawn_blocking(move || {
         let input = plugin.pre(payload)?;
