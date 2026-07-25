@@ -4,6 +4,6 @@ __pycache__
 
 models/*
 datasets/*
-crates/my-model/*
+examples/my-model/*
 
 burn-onnx/

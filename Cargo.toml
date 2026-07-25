@@ -1,4 +1,3 @@
 [workspace]
-members = ["crates/*"]
-#exclude = ["burn-onnx"]
+members = ["guimauve", "examples/*"]
 resolver = "2"

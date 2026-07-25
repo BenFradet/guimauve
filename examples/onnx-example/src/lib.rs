@@ -4,7 +4,7 @@ use anyhow::{Context, Error, Result};
 use burn::backend::{Flex, flex::FlexDevice};
 use burn::tensor::{Int, Tensor, TensorData};
 use model::Model;
-use plugin::model_plugin::ModelPlugin;
+use guimauve::model_plugin::ModelPlugin;
 use serde::{Deserialize, Serialize};
 use tokenizers::Tokenizer;
 
