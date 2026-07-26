@@ -1,0 +1,31 @@
+name: build
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: "-Dwarnings"
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Install build tools
+      run: |
+        rustup component add clippy
+        rustup component add rustfmt
+    - name: Build
+      run: cargo build --verbose
+    - name: Clippy 
+      run: cargo clippy --all-targets
+    - name: Format
+      run: cargo fmt --check
+    - name: Run tests
+      run: cargo test --verbose
