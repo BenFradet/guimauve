@@ -8,6 +8,15 @@
 - [burn](https://github.com/tracel-ai/burn)
 - [axum](https://github.com/tokio-rs/axum)
 
+## Features
+
+- production-reading serving thanks to Axum
+- seamless Burn integration to import model weights
+- structured inference pipeline
+- concurrency control: semaphore-based admission control to prevent oversubscription
+- ease of use: bring your ONNX or Burn model => implement a trait => get an inference server with
+backpressure and resource management
+
 ## Quickstart
 
 Add `guimauve` as a dependency:
