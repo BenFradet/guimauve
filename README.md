@@ -4,11 +4,78 @@
   guimauve
 </h2>
 
-`guimauve`, French for marshmallow, is an inference server built on top of [burn](https://github.com/tracel-ai/burn).
+`guimauve`, French for marshmallow, is an inference server built on top of:
+- [burn](https://github.com/tracel-ai/burn)
+- [axum](https://github.com/tokio-rs/axum)
 
 ## Quickstart
 
-TODO
+Add `guimauve` as a dependency:
+
+```bash
+cargo add guimauve
+```
+
+Implement the `ModelPlugin` trait:
+
+```rust
+// lib.rs
+use burn::tensor::{Int, Tensor};
+use guimauve::model_plugin::ModelPlugin;
+
+struct MyPlugin;
+
+impl ModelPlugin for MyPlugin {
+    type Request = serde_json::Value;
+    type Response = serde_json::Value;
+    type ModelInput = Tensor<Flex, 2, Int>;
+    type ModelOutput = Tensor<Flex, 2, Int>;
+    type Error = anyhow::Error;
+
+    fn pre(&self, req: Self::Request) -> Result<Self::ModelInput, Self::Error> {
+        // parse and prepare model input
+        todo!()
+    }
+
+    fn infer(&self, input: Self::ModelInput) -> Result<Self::ModelOutput, Self::Error> {
+        // run inference
+        todo!()
+    }
+
+    fn post(&self, output: Self::ModelOutput) -> Result<Self::Response, Self::Error> {
+        // format response
+        todo!()
+    }
+}
+```
+
+Define your entrypoint:
+
+```rust
+// main.rs
+fn main() -> anyhow::Result<()> {
+    let cpus = std::thread::available_parallelism()?.get();
+    guimauve::server::set_max_concurrency(cpus.saturating_sub(1).max(1));
+
+    let plugin = MyPlugin;
+
+    tokio::runtime::Builder::new_multi_thread()
+        .worker_threads(1)
+        .max_blocking_threads(cpus)
+        .build()?
+        .block_on(async { guimauve::server::serve(plugin, "0.0.0.0:3000").await })
+}
+```
+
+Two endpoints are available:
+
+```bash
+curl http://0.0.0.0:3000/health
+# inference
+curl -X POST http://0.0.0.0:3000/infer \
+    -H 'Content-Type: application/json' \
+    -d '{"en_sentence": "why are people from Lisboa eating snails?"}'
+```
 
 You can check the tutorial below for a full-fledged example.
 
