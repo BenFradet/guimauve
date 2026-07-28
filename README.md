@@ -63,16 +63,12 @@ Define your entrypoint:
 ```rust
 // main.rs
 fn main() -> anyhow::Result<()> {
-    let cpus = std::thread::available_parallelism()?.get();
-    guimauve::server::set_max_concurrency(cpus.saturating_sub(1).max(1));
-
     let plugin = MyPlugin;
 
-    tokio::runtime::Builder::new_multi_thread()
-        .worker_threads(1)
-        .max_blocking_threads(cpus)
+    guimauve::server::Server::builder(plugin)
+        .address("0.0.0.0:3000".to_string())
         .build()?
-        .block_on(async { guimauve::server::serve(plugin, "0.0.0.0:3000").await })
+        .serve()
 }
 ```
 

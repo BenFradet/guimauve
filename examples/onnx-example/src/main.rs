@@ -1,8 +1,8 @@
 use std::path::Path;
 
 use anyhow::Result;
+use guimauve::server::Server;
 use onnx_example::TranslationPlugin;
-use tokio::runtime::Builder;
 use tracing_subscriber::{EnvFilter, layer::SubscriberExt, util::SubscriberInitExt};
 
 fn main() -> Result<()> {
@@ -19,15 +19,8 @@ fn main() -> Result<()> {
         Path::new("/artifacts/pt_tokenizer.json"),
     )?;
 
-    let cpus = std::thread::available_parallelism()?.get();
-
-    guimauve::server::set_max_concurrency(cpus.saturating_sub(1).max(1));
-
-    Builder::new_multi_thread()
-        .worker_threads(1)
-        // to use in conjunction with spawn_blocking
-        .max_blocking_threads(cpus)
-        .enable_all()
+    Server::builder(plugin)
+        .address("0.0.0.0:3000".to_string())
         .build()?
-        .block_on(async { guimauve::server::serve(plugin, "0.0.0.0:3000").await })
+        .serve()
 }
