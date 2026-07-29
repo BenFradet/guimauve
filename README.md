@@ -17,6 +17,11 @@
 - ease of use: bring your ONNX or Burn model => implement a trait => get an inference server with
 backpressure and resource management
 
+## Performance
+
+Internal performance testing has proven `guimauve` to be a lot less resource-hungry and behave
+better under load compared to a FastAPI + PyTorch set up.
+
 ## Quickstart
 
 Add `guimauve` as a dependency:
