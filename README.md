@@ -87,7 +87,8 @@ curl -X POST http://0.0.0.0:3000/infer \
     -d '{"en_sentence": "why are people from Lisboa eating snails?"}'
 ```
 
-You can check the tutorial below for a full-fledged example.
+You can check the tutorial below for a full-fledged example or the examples in
+[the dedicated folder][./examples].
 
 ## Tutorial
 
