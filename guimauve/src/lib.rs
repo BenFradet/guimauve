@@ -1,15 +1,16 @@
 //! `guimauve`, French for marshmallow, is an inference server built on top of:
-//! - [burn](https://github.com/tracel-ai/burn)
-//! - [axum](https://github.com/tokio-rs/axum)
+//! - [burn]
+//! - [axum]
 //! 
 //! ## Features
 //! 
-//! - production-reading serving thanks to Axum
-//! - seamless Burn integration to import model weights
-//! - structured inference pipeline
+//! - seamless [burn] integration to import models
+//! - production-ready inference serving thanks to [axum]
 //! - concurrency control: semaphore-based admission control to prevent oversubscription
-//! - ease of use: bring your ONNX or Burn model => implement a trait => get an inference server with
-//!   backpressure and resource management
+//! - ease of use:
+//!   - bring your ONNX or [burn] model
+//!   - implement a trait
+//!   - get an inference server with backpressure and resource management
 //! 
 //! ## Performance
 //! 
@@ -24,10 +25,10 @@
 //! cargo add guimauve
 //! ```
 //! 
-//! Implement the [`ModelPlugin`] trait:
-//! 
 //! ```rust,no_run
+//! // Implement the [`ModelPlugin`] trait
 //! // lib.rs
+//! use burn::backend::flex;
 //! use burn::tensor::{Int, Tensor};
 //! use guimauve::model_plugin::ModelPlugin;
 //! 
@@ -55,11 +56,8 @@
 //!         todo!()
 //!     }
 //! }
-//! ```
-//! 
-//! Define your entrypoint:
-//! 
-//! ```rust
+//!
+//! // Define your entrypoint
 //! // main.rs
 //! fn main() -> anyhow::Result<()> {
 //!     let plugin = MyPlugin;
@@ -74,9 +72,9 @@
 //! Two endpoints are available:
 //! 
 //! ```bash
-//! curl http://0.0.0.0:3000/health
+//! curl http://0.0.0.0:3000/v1/health
 //! # inference
-//! curl -X POST http://0.0.0.0:3000/infer \
+//! curl -X POST http://0.0.0.0:3000/v1/infer \
 //!     -H 'Content-Type: application/json' \
 //!     -d '{"en_sentence": "why are people from Lisboa eating snails?"}'
 //! ```
@@ -84,6 +82,8 @@
 //!
 //! [`ModelPlugin`]: crate::model_plugin::ModelPlugin
 //! [examples]: https://github.com/BenFradet/guimauve/tree/main/examples
+//! [burn]: https://github.com/tracel-ai/burn
+//! [axum]: https://github.com/tokio-rs/axum
 
 #![warn(clippy::pedantic)]
 pub mod model_plugin;

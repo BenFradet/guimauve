@@ -5,17 +5,18 @@
 </h2>
 
 `guimauve`, French for marshmallow, is an inference server built on top of:
-- [burn](https://github.com/tracel-ai/burn)
-- [axum](https://github.com/tokio-rs/axum)
+- [burn]
+- [axum]
 
 ## Features
 
-- production-reading serving thanks to Axum
-- seamless Burn integration to import model weights
-- structured inference pipeline
+- seamless [burn] integration to import models
+- production-ready inference serving thanks to [axum]
 - concurrency control: semaphore-based admission control to prevent oversubscription
-- ease of use: bring your ONNX or Burn model => implement a trait => get an inference server with
-backpressure and resource management
+- ease of use:
+  - bring your ONNX or [burn] model
+  - implement a trait
+  - get an inference server with backpressure and resource management
 
 ## Performance
 
@@ -34,6 +35,7 @@ Implement the `ModelPlugin` trait:
 
 ```rust
 // lib.rs
+use burn::backend::Flex;
 use burn::tensor::{Int, Tensor};
 use guimauve::model_plugin::ModelPlugin;
 
@@ -80,9 +82,9 @@ fn main() -> anyhow::Result<()> {
 Two endpoints are available:
 
 ```bash
-curl http://0.0.0.0:3000/health
+curl http://0.0.0.0:3000/v1/health
 # inference
-curl -X POST http://0.0.0.0:3000/infer \
+curl -X POST http://0.0.0.0:3000/v1/infer \
     -H 'Content-Type: application/json' \
     -d '{"en_sentence": "why are people from Lisboa eating snails?"}'
 ```
@@ -200,3 +202,6 @@ uv run dbx-to-onnx \
 This will create a `model.onnx` file in the specified output directory.
 
 There is more information in the dedicated [README](./dbx-to-onnx/README.md).
+
+[burn]: https://github.com/tracel-ai/burn
+[axum]: https://github.com/tokio-rs/axum
