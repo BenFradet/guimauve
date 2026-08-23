@@ -23,6 +23,11 @@
 Internal performance testing has proven `guimauve` to be a lot less resource-hungry and behave
 better under load compared to a FastAPI + PyTorch set up.
 
+## Next up
+
+- GPU inference
+- batch inference
+
 ## Quickstart
 
 Add `guimauve` as a dependency:
