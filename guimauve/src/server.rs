@@ -71,18 +71,18 @@ impl<P: ModelPlugin> ServerBuilder<P> {
         }
     }
 
-    pub fn address(mut self, address: String) -> Self {
-        self.address = Some(address);
+    pub fn address(mut self, address: impl Into<String>) -> Self {
+        self.address = Some(address.into());
         self
     }
 
-    pub fn endpoint_inference(mut self, endpoint_inference: String) -> Self {
-        self.endpoint_inference = Some(endpoint_inference);
+    pub fn endpoint_inference(mut self, endpoint_inference: impl Into<String>) -> Self {
+        self.endpoint_inference = Some(endpoint_inference.into());
         self
     }
 
-    pub fn endpoint_health(mut self, endpoint_health: String) -> Self {
-        self.endpoint_health = Some(endpoint_health);
+    pub fn endpoint_health(mut self, endpoint_health: impl Into<String>) -> Self {
+        self.endpoint_health = Some(endpoint_health.into());
         self
     }
 

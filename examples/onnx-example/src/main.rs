@@ -20,7 +20,7 @@ fn main() -> Result<()> {
     )?;
 
     Server::builder(plugin)
-        .address("0.0.0.0:3000".to_string())
+        .address("0.0.0.0:3000")
         .build()?
         .serve()
 }
