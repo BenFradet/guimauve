@@ -8,8 +8,9 @@ use tracing_subscriber::{EnvFilter, layer::SubscriberExt, util::SubscriberInitEx
 fn main() -> Result<()> {
     tracing_subscriber::registry()
         .with(
-            EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| format!("{}=trace", env!("CARGO_CRATE_NAME")).into()),
+            EnvFilter::try_from_default_env().unwrap_or_else(|_| {
+                format!("guimauve=info,{}=trace", env!("CARGO_CRATE_NAME")).into()
+            }),
         )
         .with(tracing_subscriber::fmt::layer())
         .init();

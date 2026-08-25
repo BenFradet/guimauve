@@ -170,7 +170,7 @@ docker run -p 3000:3000 --name onnx-example onnx-example
 Check it's working:
 
 ```bash
-curl -X POST localhost:3000/infer \
+curl -X POST localhost:3000/v1/infer \
     -H 'Content-Type: application/json' \
     -d '{"en_sentence": "why are people from Lisboa eating snails?"}'
 ```

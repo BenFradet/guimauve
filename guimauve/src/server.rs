@@ -28,6 +28,13 @@ impl<P: ModelPlugin> Server<P> {
     }
 
     pub fn serve(self) -> Result<()> {
+        tracing::info!(
+            worker_threads = self.worker_threads,
+            max_blocking_threads = self.max_blocking_threads,
+            max_concurrency = self.max_blocking_threads,
+            "runtime configuration",
+        );
+
         set_max_concurrency(self.max_concurrency);
 
         Builder::new_multi_thread()
@@ -136,7 +143,12 @@ async fn serve<P: ModelPlugin>(
         .route(endpoint_health, get(|| async { StatusCode::OK }))
         .with_state(plugin);
     let listener = TcpListener::bind(addr).await?;
-    tracing::info!("listening on {}", listener.local_addr()?);
+    tracing::info!(
+        address = listener.local_addr()?.to_string(),
+        endpoint_inference = endpoint_inference,
+        endpoint_health = endpoint_health,
+        "listening on",
+    );
     axum::serve(listener, app)
         .with_graceful_shutdown(shutdown_signal())
         .await?;
