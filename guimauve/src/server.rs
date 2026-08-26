@@ -31,7 +31,7 @@ impl<P: ModelPlugin> Server<P> {
         tracing::info!(
             worker_threads = self.worker_threads,
             max_blocking_threads = self.max_blocking_threads,
-            max_concurrency = self.max_blocking_threads,
+            max_concurrency = self.max_concurrency,
             "runtime configuration",
         );
 
