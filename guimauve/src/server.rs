@@ -1,4 +1,4 @@
-use std::sync::{Arc, OnceLock};
+use std::sync::Arc;
 
 use anyhow::Result;
 use axum::{
@@ -35,8 +35,6 @@ impl<P: ModelPlugin> Server<P> {
             "runtime configuration",
         );
 
-        set_max_concurrency(self.max_concurrency);
-
         Builder::new_multi_thread()
             .worker_threads(self.worker_threads)
             // to use in conjunction with spawn_blocking
@@ -49,9 +47,33 @@ impl<P: ModelPlugin> Server<P> {
                     &self.address,
                     &self.endpoint_inference,
                     &self.endpoint_health,
+                    self.max_concurrency,
                 )
                 .await
             })
+    }
+}
+
+struct AppState<P: ModelPlugin> {
+    plugin: Arc<P>,
+    semaphore: Arc<Semaphore>,
+}
+
+impl<P: ModelPlugin> AppState<P> {
+    fn new(plugin: P, max_concurrency: usize) -> Self {
+        Self {
+            plugin: Arc::new(plugin),
+            semaphore: Arc::new(Semaphore::new(max_concurrency)),
+        }
+    }
+}
+
+impl<P: ModelPlugin> Clone for AppState<P> {
+    fn clone(&self) -> Self {
+        Self {
+            plugin: Arc::clone(&self.plugin),
+            semaphore: Arc::clone(&self.semaphore),
+        }
     }
 }
 
@@ -124,24 +146,19 @@ impl<P: ModelPlugin> ServerBuilder<P> {
     }
 }
 
-// c.f. https://docs.rs/tokio/latest/tokio/sync/struct.Semaphore.html#limit-the-number-of-incoming-requests-being-handled-at-the-same-time
-static SEMAPHORE: OnceLock<Semaphore> = OnceLock::new();
-
-fn set_max_concurrency(n: usize) {
-    SEMAPHORE.get_or_init(|| Semaphore::new(n));
-}
-
 async fn serve<P: ModelPlugin>(
     plugin: P,
     addr: &str,
     endpoint_inference: &str,
     endpoint_health: &str,
+    max_concurrency: usize,
 ) -> Result<()> {
-    let plugin = Arc::new(plugin);
+    // c.f. https://docs.rs/tokio/latest/tokio/sync/struct.Semaphore.html#limit-the-number-of-incoming-requests-being-handled-at-the-same-time
+    let state = AppState::new(plugin, max_concurrency);
     let app = Router::new()
         .route(endpoint_inference, post(infer::<P>))
         .route(endpoint_health, get(|| async { StatusCode::OK }))
-        .with_state(plugin);
+        .with_state(state);
     let listener = TcpListener::bind(addr).await?;
     tracing::info!(
         address = listener.local_addr()?.to_string(),
@@ -156,15 +173,18 @@ async fn serve<P: ModelPlugin>(
 }
 
 async fn infer<P: ModelPlugin>(
-    State(plugin): State<Arc<P>>,
+    State(state): State<AppState<P>>,
     extract::Json(payload): extract::Json<P::Request>,
 ) -> Result<extract::Json<P::Response>, (StatusCode, String)> {
-    let _permit = match SEMAPHORE.get() {
-        Some(sem) => sem.acquire().await.ok(),
-        None => None,
-    };
+    let permit = Arc::clone(&state.semaphore)
+        .acquire_owned()
+        .await
+        .map_err(|_| (StatusCode::SERVICE_UNAVAILABLE, "server is shutting down".to_string()))?;
+    let plugin = state.plugin;
     // this is heavily cpu bound, hence spawn_blocking
     let response = task::spawn_blocking(move || {
+        // released when work ends
+        let _permit = permit;
         let input = plugin.pre(payload)?;
         let output = plugin.infer(input)?;
         plugin.post(output)
