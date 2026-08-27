@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{sync::Arc, time::Duration};
 
 use anyhow::Result;
 use axum::{
@@ -20,6 +20,7 @@ pub struct Server<P: ModelPlugin> {
     worker_threads: usize,
     max_blocking_threads: usize,
     max_concurrency: usize,
+    max_queue_wait: Duration,
 }
 
 impl<P: ModelPlugin> Server<P> {
@@ -32,6 +33,7 @@ impl<P: ModelPlugin> Server<P> {
             worker_threads = self.worker_threads,
             max_blocking_threads = self.max_blocking_threads,
             max_concurrency = self.max_concurrency,
+            max_queue_wait = ?self.max_queue_wait,
             "runtime configuration",
         );
 
@@ -48,6 +50,7 @@ impl<P: ModelPlugin> Server<P> {
                     &self.endpoint_inference,
                     &self.endpoint_health,
                     self.max_concurrency,
+                    self.max_queue_wait,
                 )
                 .await
             })
@@ -57,13 +60,15 @@ impl<P: ModelPlugin> Server<P> {
 struct ServerState<P: ModelPlugin> {
     plugin: Arc<P>,
     semaphore: Arc<Semaphore>,
+    max_queue_wait: Duration,
 }
 
 impl<P: ModelPlugin> ServerState<P> {
-    fn new(plugin: P, max_concurrency: usize) -> Self {
+    fn new(plugin: P, max_concurrency: usize, max_queue_wait: Duration) -> Self {
         Self {
             plugin: Arc::new(plugin),
             semaphore: Arc::new(Semaphore::new(max_concurrency)),
+            max_queue_wait,
         }
     }
 }
@@ -73,6 +78,7 @@ impl<P: ModelPlugin> Clone for ServerState<P> {
         Self {
             plugin: Arc::clone(&self.plugin),
             semaphore: Arc::clone(&self.semaphore),
+            max_queue_wait: self.max_queue_wait,
         }
     }
 }
@@ -85,6 +91,7 @@ pub struct ServerBuilder<P: ModelPlugin> {
     worker_threads: Option<usize>,
     max_blocking_threads: Option<usize>,
     max_concurrency: Option<usize>,
+    max_queue_wait: Option<Duration>,
 }
 
 impl<P: ModelPlugin> ServerBuilder<P> {
@@ -97,6 +104,7 @@ impl<P: ModelPlugin> ServerBuilder<P> {
             worker_threads: None,
             max_blocking_threads: None,
             max_concurrency: None,
+            max_queue_wait: None,
         }
     }
 
@@ -130,6 +138,15 @@ impl<P: ModelPlugin> ServerBuilder<P> {
         self
     }
 
+    /// Sets the server max queue wait: the time spent waiting for a permit from the semaphore.
+    /// Sheds sustained overload while absorbing short bursts.
+    /// Needs to be lower than client timeout.
+    /// Defaults to 1 second.
+    pub fn max_queue_wait(mut self, max_queue_wait: Duration) -> Self {
+        self.max_queue_wait = Some(max_queue_wait);
+        self
+    }
+
     pub fn build(self) -> Result<Server<P>> {
         let parallelism = std::thread::available_parallelism()?.get();
         Ok(Server {
@@ -142,6 +159,7 @@ impl<P: ModelPlugin> ServerBuilder<P> {
             max_concurrency: self
                 .max_concurrency
                 .unwrap_or(parallelism.saturating_sub(1).max(1)),
+            max_queue_wait: self.max_queue_wait.unwrap_or(Duration::from_secs(1)),
         })
     }
 }
@@ -152,9 +170,10 @@ async fn serve<P: ModelPlugin>(
     endpoint_inference: &str,
     endpoint_health: &str,
     max_concurrency: usize,
+    max_queue_wait: Duration,
 ) -> Result<()> {
     // c.f. https://docs.rs/tokio/latest/tokio/sync/struct.Semaphore.html#limit-the-number-of-incoming-requests-being-handled-at-the-same-time
-    let state = ServerState::new(plugin, max_concurrency);
+    let state = ServerState::new(plugin, max_concurrency, max_queue_wait);
     let app = Router::new()
         .route(endpoint_inference, post(infer::<P>))
         .route(endpoint_health, get(|| async { StatusCode::OK }))
@@ -176,10 +195,25 @@ async fn infer<P: ModelPlugin>(
     State(state): State<ServerState<P>>,
     extract::Json(payload): extract::Json<P::Request>,
 ) -> Result<extract::Json<P::Response>, (StatusCode, String)> {
-    let permit = Arc::clone(&state.semaphore)
-        .acquire_owned()
-        .await
-        .map_err(|_| (StatusCode::SERVICE_UNAVAILABLE, "server is shutting down".to_string()))?;
+    let permit = tokio::time::timeout(
+        state.max_queue_wait,
+        Arc::clone(&state.semaphore).acquire_owned(),
+    )
+    .await
+    // waited too long for a permit
+    .map_err(|_| {
+        (
+            StatusCode::SERVICE_UNAVAILABLE,
+            "timed out waiting for a permit".to_string(),
+        )
+    })?
+    // semaphore closed
+    .map_err(|_| {
+        (
+            StatusCode::SERVICE_UNAVAILABLE,
+            "server is shutting down".to_string(),
+        )
+    })?;
     let plugin = state.plugin;
     // this is heavily cpu bound, hence spawn_blocking
     let response = task::spawn_blocking(move || {
