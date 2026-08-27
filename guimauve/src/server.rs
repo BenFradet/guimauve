@@ -54,12 +54,12 @@ impl<P: ModelPlugin> Server<P> {
     }
 }
 
-struct AppState<P: ModelPlugin> {
+struct ServerState<P: ModelPlugin> {
     plugin: Arc<P>,
     semaphore: Arc<Semaphore>,
 }
 
-impl<P: ModelPlugin> AppState<P> {
+impl<P: ModelPlugin> ServerState<P> {
     fn new(plugin: P, max_concurrency: usize) -> Self {
         Self {
             plugin: Arc::new(plugin),
@@ -68,7 +68,7 @@ impl<P: ModelPlugin> AppState<P> {
     }
 }
 
-impl<P: ModelPlugin> Clone for AppState<P> {
+impl<P: ModelPlugin> Clone for ServerState<P> {
     fn clone(&self) -> Self {
         Self {
             plugin: Arc::clone(&self.plugin),
@@ -154,7 +154,7 @@ async fn serve<P: ModelPlugin>(
     max_concurrency: usize,
 ) -> Result<()> {
     // c.f. https://docs.rs/tokio/latest/tokio/sync/struct.Semaphore.html#limit-the-number-of-incoming-requests-being-handled-at-the-same-time
-    let state = AppState::new(plugin, max_concurrency);
+    let state = ServerState::new(plugin, max_concurrency);
     let app = Router::new()
         .route(endpoint_inference, post(infer::<P>))
         .route(endpoint_health, get(|| async { StatusCode::OK }))
@@ -173,7 +173,7 @@ async fn serve<P: ModelPlugin>(
 }
 
 async fn infer<P: ModelPlugin>(
-    State(state): State<AppState<P>>,
+    State(state): State<ServerState<P>>,
     extract::Json(payload): extract::Json<P::Request>,
 ) -> Result<extract::Json<P::Response>, (StatusCode, String)> {
     let permit = Arc::clone(&state.semaphore)
