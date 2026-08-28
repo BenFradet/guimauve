@@ -28,6 +28,7 @@ impl<P: ModelPlugin> Server<P> {
         ServerBuilder::new(plugin)
     }
 
+    // c.f. https://docs.rs/tokio/latest/tokio/sync/struct.Semaphore.html#limit-the-number-of-incoming-requests-being-handled-at-the-same-time
     pub fn serve(self) -> Result<()> {
         tracing::info!(
             worker_threads = self.worker_threads,
@@ -43,17 +44,29 @@ impl<P: ModelPlugin> Server<P> {
             .max_blocking_threads(self.max_blocking_threads)
             .enable_all()
             .build()?
-            .block_on(async {
-                serve(
-                    self.plugin,
-                    &self.address,
-                    &self.endpoint_inference,
-                    &self.endpoint_health,
-                    self.max_concurrency,
-                    self.max_queue_wait,
-                )
-                .await
-            })
+            .block_on(self.run())
+    }
+
+    async fn run(self) -> Result<()> {
+        let listener = TcpListener::bind(&self.address).await?;
+
+        tracing::info!(
+            address = listener.local_addr()?.to_string(),
+            endpoint_inference = self.endpoint_inference,
+            endpoint_health = self.endpoint_health,
+            "listening on",
+        );
+
+        let state = ServerState::new(self.plugin, self.max_concurrency, self.max_queue_wait);
+        let router = Router::new()
+            .route(&self.endpoint_inference, post(infer::<P>))
+            .route(&self.endpoint_health, get(|| async { StatusCode::OK }))
+            .with_state(state);
+
+        axum::serve(listener, router)
+            .with_graceful_shutdown(shutdown_signal())
+            .await?;
+        Ok(())
     }
 }
 
@@ -162,33 +175,6 @@ impl<P: ModelPlugin> ServerBuilder<P> {
             max_queue_wait: self.max_queue_wait.unwrap_or(Duration::from_secs(1)),
         })
     }
-}
-
-async fn serve<P: ModelPlugin>(
-    plugin: P,
-    addr: &str,
-    endpoint_inference: &str,
-    endpoint_health: &str,
-    max_concurrency: usize,
-    max_queue_wait: Duration,
-) -> Result<()> {
-    // c.f. https://docs.rs/tokio/latest/tokio/sync/struct.Semaphore.html#limit-the-number-of-incoming-requests-being-handled-at-the-same-time
-    let state = ServerState::new(plugin, max_concurrency, max_queue_wait);
-    let app = Router::new()
-        .route(endpoint_inference, post(infer::<P>))
-        .route(endpoint_health, get(|| async { StatusCode::OK }))
-        .with_state(state);
-    let listener = TcpListener::bind(addr).await?;
-    tracing::info!(
-        address = listener.local_addr()?.to_string(),
-        endpoint_inference = endpoint_inference,
-        endpoint_health = endpoint_health,
-        "listening on",
-    );
-    axum::serve(listener, app)
-        .with_graceful_shutdown(shutdown_signal())
-        .await?;
-    Ok(())
 }
 
 async fn infer<P: ModelPlugin>(

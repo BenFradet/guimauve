@@ -6,9 +6,9 @@
 //! 
 //! - seamless [burn] integration to import models
 //! - production-ready inference serving thanks to [axum]
-//! - concurrency control: semaphore-based admission control to prevent oversubscription
+//! - concurrency control: semaphore-based admission control to prevent overload
 //! - ease of use:
-//!   - bring your ONNX or [burn] model
+//!   - bring your [onnx] or [burn] model
 //!   - implement a trait
 //!   - get an inference server with backpressure and resource management
 //! 
@@ -89,6 +89,7 @@
 //! [examples]: https://github.com/BenFradet/guimauve/tree/main/examples
 //! [burn]: https://github.com/tracel-ai/burn
 //! [axum]: https://github.com/tokio-rs/axum
+//! [onnx]: https://github.com/onnx/onnx
 
 #![warn(clippy::pedantic)]
 pub mod model_plugin;
