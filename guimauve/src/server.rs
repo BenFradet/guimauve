@@ -121,31 +121,70 @@ impl<P: ModelPlugin> ServerBuilder<P> {
         }
     }
 
+    /// Sets the address the server will bind to.
+    ///
+    /// # Default
+    ///
+    /// Defaults to "0.0.0.0:8080".
+    #[must_use]
     pub fn address(mut self, address: impl Into<String>) -> Self {
         self.address = Some(address.into());
         self
     }
 
+    /// Sets the endpoint for inference.
+    ///
+    /// # Default
+    ///
+    /// Defaults to "/v1/infer".
+    #[must_use]
     pub fn endpoint_inference(mut self, endpoint_inference: impl Into<String>) -> Self {
         self.endpoint_inference = Some(endpoint_inference.into());
         self
     }
 
+    /// Sets the endpoint for health checks.
+    ///
+    /// # Default
+    ///
+    /// Defaults to "/v1/health".
+    #[must_use]
     pub fn endpoint_health(mut self, endpoint_health: impl Into<String>) -> Self {
         self.endpoint_health = Some(endpoint_health.into());
         self
     }
 
+    /// Sets the number of worker threads the `tokio::runtime::Runtime` will use.
+    /// Used for accepting connections, reading the request, waiting on the semaphore, writing the
+    /// response.
+    ///
+    /// # Default
+    ///
+    /// Defaults to 1.
+    #[must_use]
     pub fn worker_threads(mut self, worker_threads: usize) -> Self {
         self.worker_threads = Some(worker_threads);
         self
     }
 
+    /// Specifies the limit for additional threads spawned by the `tokio::runtime::Runtime`.
+    /// These threads are used to run the inference loop (pre, infer, post).
+    ///
+    /// # Default
+    ///
+    /// Defaults to `thread::available_parallelism`.
+    #[must_use]
     pub fn max_blocking_threads(mut self, max_blocking_threads: usize) -> Self {
         self.max_blocking_threads = Some(max_blocking_threads);
         self
     }
 
+    /// Controls the maximum number of requests being handled at the same time.
+    ///
+    /// # Default
+    ///
+    /// Defaults to max(1, `thread::available_parallelism` - 1).
+    #[must_use]
     pub fn max_concurrency(mut self, max_concurrency: usize) -> Self {
         self.max_concurrency = Some(max_concurrency);
         self
@@ -154,7 +193,11 @@ impl<P: ModelPlugin> ServerBuilder<P> {
     /// Sets the server max queue wait: the time spent waiting for a permit from the semaphore.
     /// Sheds sustained overload while absorbing short bursts.
     /// Needs to be lower than client timeout.
+    ///
+    /// # Default
+    ///
     /// Defaults to 1 second.
+    #[must_use]
     pub fn max_queue_wait(mut self, max_queue_wait: Duration) -> Self {
         self.max_queue_wait = Some(max_queue_wait);
         self
@@ -177,6 +220,8 @@ impl<P: ModelPlugin> ServerBuilder<P> {
     }
 }
 
+// TODO: move to tower layers: ConcurrencyLimit + LoadShed + Timeout
+// TODO: parsing should happen on blocking threads and after the permit is acquired
 async fn infer<P: ModelPlugin>(
     State(state): State<ServerState<P>>,
     extract::Json(payload): extract::Json<P::Request>,
