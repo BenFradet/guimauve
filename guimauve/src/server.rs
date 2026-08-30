@@ -28,7 +28,15 @@ impl<P: ModelPlugin> Server<P> {
         ServerBuilder::new(plugin)
     }
 
-    // c.f. https://docs.rs/tokio/latest/tokio/sync/struct.Semaphore.html#limit-the-number-of-incoming-requests-being-handled-at-the-same-time
+    /// Creates a multi-threaded `tokio::runtime::Runtime` serving the inference route.
+    ///
+    /// c.f. <https://docs.rs/tokio/latest/tokio/sync/struct.Semaphore.html#limit-the-number-of-incoming-requests-being-handled-at-the-same-time>
+    ///
+    /// # Errors
+    ///
+    /// It will error out if:
+    /// - the runtime can't be built
+    /// - the TCP listener can't be bound to the specified address
     pub fn serve(self) -> Result<()> {
         tracing::info!(
             worker_threads = self.worker_threads,
@@ -123,8 +131,6 @@ impl<P: ModelPlugin> ServerBuilder<P> {
 
     /// Sets the address the server will bind to.
     ///
-    /// # Default
-    ///
     /// Defaults to "0.0.0.0:8080".
     #[must_use]
     pub fn address(mut self, address: impl Into<String>) -> Self {
@@ -133,8 +139,7 @@ impl<P: ModelPlugin> ServerBuilder<P> {
     }
 
     /// Sets the endpoint for inference.
-    ///
-    /// # Default
+    /// Must start with `/`.
     ///
     /// Defaults to "/v1/infer".
     #[must_use]
@@ -144,8 +149,7 @@ impl<P: ModelPlugin> ServerBuilder<P> {
     }
 
     /// Sets the endpoint for health checks.
-    ///
-    /// # Default
+    /// Must start with `/`.
     ///
     /// Defaults to "/v1/health".
     #[must_use]
@@ -158,8 +162,6 @@ impl<P: ModelPlugin> ServerBuilder<P> {
     /// Used for accepting connections, reading the request, waiting on the semaphore, writing the
     /// response.
     ///
-    /// # Default
-    ///
     /// Defaults to 1.
     #[must_use]
     pub fn worker_threads(mut self, worker_threads: usize) -> Self {
@@ -170,8 +172,6 @@ impl<P: ModelPlugin> ServerBuilder<P> {
     /// Specifies the limit for additional threads spawned by the `tokio::runtime::Runtime`.
     /// These threads are used to run the inference loop (pre, infer, post).
     ///
-    /// # Default
-    ///
     /// Defaults to `thread::available_parallelism`.
     #[must_use]
     pub fn max_blocking_threads(mut self, max_blocking_threads: usize) -> Self {
@@ -179,9 +179,7 @@ impl<P: ModelPlugin> ServerBuilder<P> {
         self
     }
 
-    /// Controls the maximum number of requests being handled at the same time.
-    ///
-    /// # Default
+    /// Controls the maximum number of inferences being handled at the same time.
     ///
     /// Defaults to max(1, `thread::available_parallelism` - 1).
     #[must_use]
@@ -194,8 +192,6 @@ impl<P: ModelPlugin> ServerBuilder<P> {
     /// Sheds sustained overload while absorbing short bursts.
     /// Needs to be lower than client timeout.
     ///
-    /// # Default
-    ///
     /// Defaults to 1 second.
     #[must_use]
     pub fn max_queue_wait(mut self, max_queue_wait: Duration) -> Self {
@@ -203,6 +199,12 @@ impl<P: ModelPlugin> ServerBuilder<P> {
         self
     }
 
+    /// Builds a server from the given builder parameters using defaults when unspecified.
+    ///
+    /// # Errors
+    ///
+    /// * If the amount of parallelism is not known for the target platform.
+    /// * If the program lacks permission to query the amount of parallelism made available to it.
     pub fn build(self) -> Result<Server<P>> {
         let parallelism = std::thread::available_parallelism()?.get();
         Ok(Server {
@@ -221,7 +223,7 @@ impl<P: ModelPlugin> ServerBuilder<P> {
 }
 
 // TODO: move to tower layers: ConcurrencyLimit + LoadShed + Timeout
-// TODO: parsing should happen on blocking threads and after the permit is acquired
+// TODO: serde should happen on blocking threads and after the permit is acquired
 async fn infer<P: ModelPlugin>(
     State(state): State<ServerState<P>>,
     extract::Json(payload): extract::Json<P::Request>,
@@ -282,7 +284,7 @@ async fn shutdown_signal() {
     };
 
     tokio::select! {
-        _ = ctrl_c => {},
-        _ = terminate => {},
+        () = ctrl_c => {},
+        () = terminate => {},
     }
 }
