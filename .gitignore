@@ -3,6 +3,7 @@
 __pycache__
 
 models/*
+!models/transformer.onnx
 datasets/*
 examples/my-model/*
 
