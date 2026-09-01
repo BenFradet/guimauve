@@ -3,8 +3,8 @@ use std::path::Path;
 use anyhow::{Context, Error, Result};
 use burn::backend::{Flex, flex::FlexDevice};
 use burn::tensor::{Int, Tensor, TensorData};
-use model::Model;
 use guimauve::model_plugin::ModelPlugin;
+use model::Model;
 use serde::{Deserialize, Serialize};
 use tokenizers::Tokenizer;
 

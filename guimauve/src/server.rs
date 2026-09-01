@@ -24,6 +24,8 @@ pub struct Server<P: ModelPlugin> {
 }
 
 impl<P: ModelPlugin> Server<P> {
+    /// `ServerBuilder` entrypoint.
+    #[must_use]
     pub fn builder(plugin: P) -> ServerBuilder<P> {
         ServerBuilder::new(plugin)
     }
@@ -37,6 +39,10 @@ impl<P: ModelPlugin> Server<P> {
     /// It will error out if:
     /// - the runtime can't be built
     /// - the TCP listener can't be bound to the specified address
+    ///
+    /// # Panics
+    ///
+    /// Invalid endpoints according to [`axum::routing::Router::route`] will cause panics.
     pub fn serve(self) -> Result<()> {
         tracing::info!(
             worker_threads = self.worker_threads,
@@ -116,6 +122,8 @@ pub struct ServerBuilder<P: ModelPlugin> {
 }
 
 impl<P: ModelPlugin> ServerBuilder<P> {
+    /// Creates a `ServerBuilder` from a `crate::model_plugin::ModelPlugin`.
+    #[must_use]
     pub fn new(plugin: P) -> Self {
         Self {
             plugin,
