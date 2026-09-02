@@ -33,15 +33,15 @@
 //! ```rust,no_run
 //! // Implement the [`ModelPlugin`] trait
 //! // lib.rs
-//! use burn::backend::flex;
+//! use burn::backend::Flex;
 //! use burn::tensor::{Int, Tensor};
 //! use guimauve::model_plugin::ModelPlugin;
 //!
 //! struct MyPlugin;
 //!
 //! impl ModelPlugin for MyPlugin {
-//!     type Request = serde_json::Value;
-//!     type Response = serde_json::Value;
+//!     type Request = serde_json::value::Value;
+//!     type Response = serde_json::value::Value;
 //!     type ModelInput = Tensor<Flex, 2, Int>;
 //!     type ModelOutput = Tensor<Flex, 2, Int>;
 //!     type Error = anyhow::Error;
