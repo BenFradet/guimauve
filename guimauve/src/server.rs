@@ -42,7 +42,7 @@ impl<P: ModelPlugin> Server<P> {
     ///
     /// # Panics
     ///
-    /// Invalid endpoints according to [`axum::routing::Router::route`] will cause panics.
+    /// c.f. [`axum::routing::Router::route`]
     pub fn serve(self) -> Result<()> {
         tracing::info!(
             worker_threads = self.worker_threads,
@@ -61,26 +61,41 @@ impl<P: ModelPlugin> Server<P> {
             .block_on(self.run())
     }
 
-    async fn run(self) -> Result<()> {
-        let listener = TcpListener::bind(&self.address).await?;
-
+    /// Serves on the supplied [`TcpListener`], useful for tests.
+    ///
+    /// # Errors
+    ///
+    /// Although this future resolves to [`Result<()>`], it will never actually complete or return an
+    /// error.
+    pub async fn run_on(self, listener: TcpListener) -> Result<()> {
         tracing::info!(
             address = listener.local_addr()?.to_string(),
             endpoint_inference = self.endpoint_inference,
             endpoint_health = self.endpoint_health,
             "listening on",
         );
-
-        let state = ServerState::new(self.plugin, self.max_concurrency, self.max_queue_wait);
-        let router = Router::new()
-            .route(&self.endpoint_inference, post(infer::<P>))
-            .route(&self.endpoint_health, get(|| async { StatusCode::OK }))
-            .with_state(state);
-
-        axum::serve(listener, router)
+        axum::serve(listener, self.router())
             .with_graceful_shutdown(shutdown_signal())
             .await?;
         Ok(())
+    }
+
+    /// Builds the [`Router`] for the inference and health endpoints
+    ///
+    /// # Panics
+    ///
+    /// c.f. [`axum::routing::Router::route`]
+    pub fn router(self) -> Router {
+        let state = ServerState::new(self.plugin, self.max_concurrency, self.max_queue_wait);
+        Router::new()
+            .route(&self.endpoint_inference, post(infer::<P>))
+            .route(&self.endpoint_health, get(|| async { StatusCode::OK }))
+            .with_state(state)
+    }
+
+    async fn run(self) -> Result<()> {
+        let listener = TcpListener::bind(&self.address).await?;
+        self.run_on(listener).await
     }
 }
 
