@@ -7,12 +7,12 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize)]
 pub struct Req {
-    n: i64,
+    pub n: i64,
 }
 
-#[derive(Debug, Serialize, PartialEq, Eq)]
+#[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct Res {
-    n: i64,
+    pub n: i64,
 }
 
 pub struct TestPlugin {
