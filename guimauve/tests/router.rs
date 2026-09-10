@@ -56,7 +56,7 @@ async fn plugin_error_is_500() {
     let req = json_post("/v1/infer", &serde_json::json!({"n": -1}));
     let (status, body) = send(router(Duration::ZERO), req).await;
     assert_eq!(status, StatusCode::INTERNAL_SERVER_ERROR);
-    assert_eq!(body, "negative_input");
+    assert_eq!(body, "negative input");
 }
 
 #[tokio::test]
