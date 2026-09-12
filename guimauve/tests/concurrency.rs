@@ -71,5 +71,5 @@ async fn max_concurrency_is_respected() {
         assert_eq!(h.await.unwrap(), StatusCode::OK);
     }
 
-    assert!(peak.load(Ordering::SeqCst) <= 2);
+    assert_eq!(peak.load(Ordering::SeqCst), 2);
 }

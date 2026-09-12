@@ -52,7 +52,7 @@ impl ModelPlugin for TestPlugin {
 
     fn infer(&self, input: Self::ModelInput) -> Result<Self::ModelOutput, Self::Error> {
         let ordering = Ordering::SeqCst;
-        let now = self.in_flight.fetch_add(1, ordering);
+        let now = self.in_flight.fetch_add(1, ordering) + 1;
         self.peak_in_flight.fetch_max(now, ordering);
         thread::sleep(self.infer_delay);
         self.in_flight.fetch_sub(1, ordering);

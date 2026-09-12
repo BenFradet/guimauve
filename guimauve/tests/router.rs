@@ -3,12 +3,9 @@
 use std::time::Duration;
 
 use axum::{
-    Router,
-    body::{Body, to_bytes},
-    http::Request,
+    Router, body::{Body, to_bytes}, http::{Request, StatusCode},
 };
 use guimauve::server::Server;
-use reqwest::StatusCode;
 use serde_json::from_str;
 use tower::ServiceExt;
 
