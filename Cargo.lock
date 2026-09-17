@@ -1440,6 +1440,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "compare"
+version = "0.1.0"
+
+[[package]]
 name = "comrak"
 version = "0.39.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
