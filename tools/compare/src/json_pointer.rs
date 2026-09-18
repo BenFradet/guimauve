@@ -1,3 +1,6 @@
+use std::str::FromStr;
+use anyhow::{bail, Error, Result};
+
 #[derive(Debug, Eq, PartialEq)]
 pub struct JsonPointer(String);
 
@@ -5,17 +8,31 @@ impl JsonPointer {
     fn as_str(&self) -> &str {
         &self.0
     }
+
+    fn validate(s: &str) -> Result<()> {
+        if s.starts_with('/') {
+            Ok(())
+        } else {
+            bail!("JSON pointer must start with '/', got {s:?}")
+        }
+    }
+}
+
+impl FromStr for JsonPointer {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self> {
+        Self::validate(s)?;
+        Ok(Self(s.to_owned()))
+    }
 }
 
 impl TryFrom<String> for JsonPointer {
-    type Error = String;
+    type Error = Error;
 
-    fn try_from(value: String) -> Result<Self, Self::Error> {
-        if value.starts_with('/') {
-            Ok(Self(value))
-        } else {
-            Err(format!("JSON pointer must start with '/', got {value:?}"))
-        }
+    fn try_from(s: String) -> Result<Self> {
+        Self::validate(&s)?;
+        Ok(Self(s))
     }
 }
 
@@ -24,10 +41,10 @@ mod tests {
     use super::*;
 
     #[test]
-    fn try_from() {
-        let correct: Result<JsonPointer, String> = "/going/down".to_string().try_into();
-        assert_eq!(Ok(JsonPointer("/going/down".to_string())), correct);
-        let incorrect: Result<JsonPointer, String> = "going/down".to_string().try_into();
-        assert_eq!(Err("JSON pointer must start with '/', got \"going/down\"".to_string()), incorrect);
+    fn parsing() {
+        let correct: Result<JsonPointer> = "/going/down".parse();
+        assert_eq!(JsonPointer("/going/down".to_string()), correct.unwrap());
+        let incorrect: Result<JsonPointer> = "going/down".parse();
+        assert_eq!("JSON pointer must start with '/', got \"going/down\"", format!("{}", incorrect.unwrap_err()));
     }
 }
