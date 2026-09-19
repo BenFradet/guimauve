@@ -1,7 +1,8 @@
 use std::str::FromStr;
 use anyhow::{bail, Error, Result};
+use serde::Deserialize;
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Deserialize, Eq, PartialEq)]
 pub struct JsonPointer(String);
 
 impl JsonPointer {
