@@ -3,6 +3,7 @@ use anyhow::{bail, Error, Result};
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize, Eq, PartialEq)]
+#[serde(try_from = "String")]
 pub struct JsonPointer(String);
 
 impl JsonPointer {

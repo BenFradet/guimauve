@@ -16,19 +16,26 @@ pub struct Ordered {
     pub key: String,
     pub score: String,
     // c.f. https://towardsdatascience.com/rbo-v-s-kendall-tau-to-compare-ranked-lists-of-items-8776c5182899/
-    pub rank_biased_overlap: Vec<usize>,
+    pub rank_biased_overlap: f64,
+    #[serde(default)]
+    pub top_k: Vec<usize>,
 }
 
 #[derive(Deserialize)]
 pub struct Config {
     pub baseline: Service,
     pub candidate: Service,
+    #[serde(default)]
     pub ignore: Vec<JsonPointer>,
+    #[serde(default = "default_tolerance")]
     pub tolerance: f64,
+    #[serde(default)]
     pub ordered: Vec<Ordered>,
 }
 
-const DEFAULT_TOLERANCE: f64 = 1e-5;
+fn default_tolerance() -> f64 {
+    1e-5
+}
 
 pub fn load(path: &Path) -> Result<Config> {
     let text = fs::read_to_string(path)
