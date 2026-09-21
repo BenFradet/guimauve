@@ -1,6 +1,6 @@
 use std::{fs, path::Path};
 
-use anyhow::{Context, Result};
+use anyhow::{Context, Error, Result, bail};
 use serde::Deserialize;
 
 use crate::json_pointer::JsonPointer;
@@ -11,12 +11,33 @@ pub struct Service {
 }
 
 #[derive(Deserialize)]
+#[serde(try_from = "f64")]
+pub struct Persistence(f64);
+
+impl Persistence {
+    pub fn as_f64(&self) -> f64 {
+        self.0
+    }
+}
+
+impl TryFrom<f64> for Persistence {
+    type Error = Error;
+
+    fn try_from(value: f64) -> Result<Self> {
+        if value > 0. && value < 1. {
+            Ok(Self(value))
+        } else {
+            bail!("persistence must be ]0; 1[, got {value}")
+        }
+    }
+}
+
+#[derive(Deserialize)]
 pub struct Ordered {
     pub path: JsonPointer,
     pub key: String,
     pub score: String,
-    // c.f. https://towardsdatascience.com/rbo-v-s-kendall-tau-to-compare-ranked-lists-of-items-8776c5182899/
-    pub rank_biased_overlap: f64,
+    pub persistence: Persistence,
     #[serde(default)]
     pub top_k: Vec<usize>,
 }
