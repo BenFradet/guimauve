@@ -3,7 +3,9 @@
 use std::time::Duration;
 
 use axum::{
-    Router, body::{Body, to_bytes}, http::{Request, StatusCode},
+    Router,
+    body::{Body, to_bytes},
+    http::{Request, StatusCode},
 };
 use guimauve::server::Server;
 use serde_json::from_str;

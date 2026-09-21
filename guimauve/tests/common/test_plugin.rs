@@ -1,5 +1,10 @@
 use std::{
-    sync::{Arc, atomic::{AtomicUsize, Ordering}}, thread, time::Duration,
+    sync::{
+        Arc,
+        atomic::{AtomicUsize, Ordering},
+    },
+    thread,
+    time::Duration,
 };
 
 use guimauve::model_plugin::ModelPlugin;

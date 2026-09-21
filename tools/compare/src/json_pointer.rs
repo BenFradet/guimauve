@@ -1,6 +1,6 @@
-use std::str::FromStr;
-use anyhow::{bail, Error, Result};
+use anyhow::{Error, Result, bail};
 use serde::Deserialize;
+use std::str::FromStr;
 
 #[derive(Debug, Deserialize, Eq, PartialEq)]
 #[serde(try_from = "String")]
@@ -47,6 +47,9 @@ mod tests {
         let correct: Result<JsonPointer> = "/going/down".parse();
         assert_eq!(JsonPointer("/going/down".to_string()), correct.unwrap());
         let incorrect: Result<JsonPointer> = "going/down".parse();
-        assert_eq!("JSON pointer must start with '/', got \"going/down\"", format!("{}", incorrect.unwrap_err()));
+        assert_eq!(
+            "JSON pointer must start with '/', got \"going/down\"",
+            format!("{}", incorrect.unwrap_err())
+        );
     }
 }

@@ -1,14 +1,18 @@
 use std::collections::HashSet;
 
+use crate::config::Persistence;
+
+// c.f. https://towardsdatascience.com/rbo-v-s-kendall-tau-to-compare-ranked-lists-of-items-8776c5182899/
 /// c.f. https://github.com/changyaochen/rbo/blob/master/rbo/rbo.py
-fn rank_biased_overlap_ext(a: &[String], b: &[String], p: f64) -> f64 {
-    let depth = a.len().max(b.len());
-    if depth == 0 {
+fn rank_biased_overlap_ext(a: &[String], b: &[String], p: Persistence) -> f64 {
+    if a.is_empty() && b.is_empty() {
         return 1.;
     }
     if a.is_empty() || b.is_empty() {
         return 0.;
     }
+    
+    let p = p.as_f64();
 
     let (long, short) = if a.len() > b.len() { (a, b) } else { (b, a) };
     let (l, s) = (long.len(), short.len());
@@ -56,17 +60,24 @@ fn rank_biased_overlap_ext(a: &[String], b: &[String], p: f64) -> f64 {
         } else {
             long_seen.insert(&long[d]);
 
-            let overlap_inc = if short_seen.contains(long[d].as_str()) { 1 } else { 0 };
-            
+            let overlap_inc = if short_seen.contains(long[d].as_str()) {
+                1
+            } else {
+                0
+            };
+
             x[d] = x[d - 1] + overlap_inc;
             a[d] = x[d] as f64 / (d as f64 + 1.);
-            rbo[d] = rbo[d - 1]  + (1. - p) * p.powf(d as f64) * a[d];
+            rbo[d] = rbo[d - 1] + (1. - p) * p.powf(d as f64) * a[d];
 
             // last common overlap
             let x_short = x[s - 1] as f64;
 
-            disjoint += (1. - p) * p.powf(d as f64) * (x_short as f64 * (d as f64 + 1. - s as f64) / (d as f64 + 1.) / s as f64);
-            ext_term = ((x[d] as f64 - x_short) / (d as f64 + 1.) + x[s - 1] as f64 / s as f64) * p.powf(d as f64 + 1.);
+            disjoint += (1. - p)
+                * p.powf(d as f64)
+                * (x_short as f64 * (d as f64 + 1. - s as f64) / (d as f64 + 1.) / s as f64);
+            ext_term = ((x[d] as f64 - x_short) / (d as f64 + 1.) + x[s - 1] as f64 / s as f64)
+                * p.powf(d as f64 + 1.);
         }
     }
 
