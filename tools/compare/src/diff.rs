@@ -64,3 +64,28 @@ fn rank_biased_overlap_ext<T: Hash + Eq>(a: &[T], b: &[T], p: Persistence) -> f6
 
     (rbo + disjoint + ext_term).clamp(0., 1.)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn rbo_test_helper<T: Hash + Eq>(fst: &[T], snd: &[T], expected: f64) {
+        let p: Persistence = 0.95.try_into().unwrap();
+        let res = rank_biased_overlap_ext(fst, snd, p);
+        let rounded = (res * 1000.).round() / 1000.;
+        assert_eq!(rounded, expected);
+    }
+
+    #[test]
+    fn rbo_tests() {
+        rbo_test_helper(&["a", "b", "c", "d", "e"], &["f", "g", "h", "i", "j"], 0.);
+        rbo_test_helper(&["a", "b", "c", "d", "e", "f", "g"], &["z", "c", "a", "v", "w", "x", "y"], 0.291);
+        rbo_test_helper(&["a", "b", "c", "d", "e"], &["b", "a", "c", "d", "e"], 0.95);
+        rbo_test_helper(&["a", "b", "c", "d", "e"], &["a", "b", "c", "e", "d"], 0.989);
+        rbo_test_helper(&["a"], &["a"], 1.);
+        rbo_test_helper(&["a"], &["b"], 0.);
+        rbo_test_helper(&[""], &[""], 1.);
+        rbo_test_helper(&["a"], &[""], 0.);
+        rbo_test_helper(&[""], &["a"], 0.);
+    }
+}
