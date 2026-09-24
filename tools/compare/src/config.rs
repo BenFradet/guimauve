@@ -10,7 +10,7 @@ pub struct Service {
     pub url: String,
 }
 
-#[derive(Deserialize)]
+#[derive(Clone, Copy, Debug, Deserialize)]
 #[serde(try_from = "f64")]
 pub struct Persistence(f64);
 
@@ -62,4 +62,19 @@ pub fn load(path: &Path) -> Result<Config> {
     let text = fs::read_to_string(path)
         .with_context(|| format!("reading config at {}", path.display()))?;
     toml::from_str(&text).with_context(|| format!("parsing config at {}", path.display()))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn persistence_parsing() {
+        let inf: Result<Persistence> = (-0.25).try_into();
+        assert!(inf.is_err());
+        let sup: Result<Persistence> = (1.25).try_into();
+        assert!(sup.is_err());
+        let ok: Result<Persistence> = (0.25).try_into();
+        assert!(ok.is_ok());
+    }
 }

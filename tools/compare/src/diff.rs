@@ -82,10 +82,17 @@ mod tests {
         rbo_test_helper(&["a", "b", "c", "d", "e", "f", "g"], &["z", "c", "a", "v", "w", "x", "y"], 0.291);
         rbo_test_helper(&["a", "b", "c", "d", "e"], &["b", "a", "c", "d", "e"], 0.95);
         rbo_test_helper(&["a", "b", "c", "d", "e"], &["a", "b", "c", "e", "d"], 0.989);
+
+        rbo_test_helper(&["a"], &["b", "a", "c"], 0.325);
+        rbo_test_helper(&["a", "b", "c", "d", "e"], &["a"], 1.);
+
         rbo_test_helper(&["a"], &["a"], 1.);
         rbo_test_helper(&["a"], &["b"], 0.);
         rbo_test_helper(&[""], &[""], 1.);
         rbo_test_helper(&["a"], &[""], 0.);
         rbo_test_helper(&[""], &["a"], 0.);
+        rbo_test_helper::<usize>(&[], &[], 1.);
+        rbo_test_helper(&[], &["a"], 0.);
+        rbo_test_helper(&["a"], &[], 0.);
     }
 }
