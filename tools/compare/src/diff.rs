@@ -65,6 +65,27 @@ fn rank_biased_overlap_ext<T: Hash + Eq>(a: &[T], b: &[T], p: Persistence) -> f6
     (rbo + disjoint + ext_term).clamp(0., 1.)
 }
 
+// returns tau and number of discordant
+fn kendall_tau_a<T: Ord>(seq: &[T]) -> (Option<f64>, usize) {
+    let n = seq.len();
+    let mut discordant = 0;
+    for (i, a) in seq.iter().enumerate() {
+        for b in &seq[i+1..] {
+            if a > b {
+                discordant += 1;
+            }
+        }
+    }
+    let pairs = n * (n - 1) / 2;
+    let tau = if pairs == 0 {
+        None
+    } else {
+        let pf = pairs as f64;
+        Some((pf - 2. * discordant as f64) / pf)
+    };
+    (tau, discordant)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
