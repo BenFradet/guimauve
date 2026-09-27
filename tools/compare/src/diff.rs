@@ -11,7 +11,7 @@ fn rank_biased_overlap_ext<T: Hash + Eq>(a: &[T], b: &[T], p: Persistence) -> f6
     if a.is_empty() || b.is_empty() {
         return 0.;
     }
-    
+
     let p = p.as_f64();
 
     let (long, short) = if a.len() > b.len() { (a, b) } else { (b, a) };
@@ -70,13 +70,13 @@ fn kendall_tau_a<T: Ord>(seq: &[T]) -> (Option<f64>, usize) {
     let n = seq.len();
     let mut discordant = 0;
     for (i, a) in seq.iter().enumerate() {
-        for b in &seq[i+1..] {
+        for b in &seq[i + 1..] {
             if a > b {
                 discordant += 1;
             }
         }
     }
-    let pairs = n * (n - 1) / 2;
+    let pairs = if n < 2 { 0 } else { n * (n - 1) / 2 };
     let tau = if pairs == 0 {
         None
     } else {
@@ -97,12 +97,56 @@ mod tests {
         assert_eq!(rounded, expected);
     }
 
+    fn kendall_test_helper<T: Ord>(seq: &[T], discordant_exp: usize, tau_exp: Option<f64>) {
+        let (tau, discordant) = kendall_tau_a(seq);
+        let tau_rounded = tau.map(|t| (t * 1000.).round() / 1000.);
+        assert_eq!(tau_exp, tau_rounded);
+        assert_eq!(discordant_exp, discordant);
+    }
+
+    #[test]
+    fn kendall_tests() {
+        kendall_test_helper(&[0, 1, 2, 3], 0, Some(1.));
+        kendall_test_helper(&[3, 2, 1, 0], 6, Some(-1.));
+        kendall_test_helper(&[1, 0, 2, 3], 1, Some(0.667));
+        kendall_test_helper(&[0, 1, 3, 2], 1, Some(0.667));
+        kendall_test_helper(&[0], 0, None);
+        kendall_test_helper::<usize>(&[], 0, None);
+        kendall_test_helper(&[0, 1], 0, Some(1.));
+        kendall_test_helper(&[1, 0], 1, Some(-1.));
+        kendall_test_helper(&[0, 2, 5], 0, Some(1.));
+        kendall_test_helper(&[5, 2, 0], 3, Some(-1.));
+        kendall_test_helper(&[1, 0, 3, 2, 4], 2, Some(0.6));
+    }
+
+    #[test]
+    fn why_two_metrics() {
+        // tau is position-blind, RBO weighs the head more heavily through persistence
+        let p: Persistence = 0.95.try_into().unwrap();
+        assert_eq!(
+            kendall_tau_a(&[1, 0, 2, 3]).1,
+            kendall_tau_a(&[0, 1, 3, 2]).1
+        );
+        assert!(
+            rank_biased_overlap_ext(&["a", "b", "c", "d"], &["b", "a", "c", "d"], p)
+                < rank_biased_overlap_ext(&["a", "b", "c", "d"], &["a", "b", "d", "c"], p)
+        );
+    }
+
     #[test]
     fn rbo_tests() {
         rbo_test_helper(&["a", "b", "c", "d", "e"], &["f", "g", "h", "i", "j"], 0.);
-        rbo_test_helper(&["a", "b", "c", "d", "e", "f", "g"], &["z", "c", "a", "v", "w", "x", "y"], 0.291);
+        rbo_test_helper(
+            &["a", "b", "c", "d", "e", "f", "g"],
+            &["z", "c", "a", "v", "w", "x", "y"],
+            0.291,
+        );
         rbo_test_helper(&["a", "b", "c", "d", "e"], &["b", "a", "c", "d", "e"], 0.95);
-        rbo_test_helper(&["a", "b", "c", "d", "e"], &["a", "b", "c", "e", "d"], 0.989);
+        rbo_test_helper(
+            &["a", "b", "c", "d", "e"],
+            &["a", "b", "c", "e", "d"],
+            0.989,
+        );
 
         rbo_test_helper(&["a"], &["b", "a", "c"], 0.325);
         rbo_test_helper(&["a", "b", "c", "d", "e"], &["a"], 1.);
