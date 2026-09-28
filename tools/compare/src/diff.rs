@@ -66,6 +66,7 @@ fn rank_biased_overlap_ext<T: Hash + Eq>(a: &[T], b: &[T], p: Persistence) -> f6
 }
 
 // returns tau and number of discordant
+// c.f. https://en.wikipedia.org/wiki/Kendall_rank_correlation_coefficient
 fn kendall_tau_a<T: Ord>(seq: &[T]) -> (Option<f64>, usize) {
     let n = seq.len();
     let mut discordant = 0;
@@ -84,6 +85,18 @@ fn kendall_tau_a<T: Ord>(seq: &[T]) -> (Option<f64>, usize) {
         Some((pf - 2. * discordant as f64) / pf)
     };
     (tau, discordant)
+}
+
+// fraction of the top-k prefixes that are contained in both sequences
+fn overlap_at<T: Hash + Eq>(a: &[T], b: &[T], k: usize) -> Option<f64> {
+    let depth = k.min(a.len().max(b.len()));
+    if depth == 0 {
+        return None;
+    }
+
+    let head: HashSet<&T> = a.iter().take(k).collect();
+    let hits = b.iter().take(k).filter(|x| head.contains(*x)).count();
+    Some(hits as f64 / depth as f64)
 }
 
 #[cfg(test)]
