@@ -173,4 +173,14 @@ mod tests {
         rbo_test_helper(&[], &["a"], 0.);
         rbo_test_helper(&["a"], &[], 0.);
     }
+
+    #[test]
+    fn overlap_tests() {
+        assert_eq!(Some(1.), overlap_at(&["a", "b", "c"], &["b", "a", "z"], 2));
+        assert_eq!(Some(2./3.), overlap_at(&["a", "b", "c"], &["b", "a", "z"], 3));
+        assert_eq!(Some(0.), overlap_at(&["a"], &["b"], 1));
+        assert_eq!(Some(0.25), overlap_at(&["a", "b", "c", "d"], &["a"], 4));
+        assert_eq!(None, overlap_at::<usize>(&[], &[], 10));
+        assert_eq!(Some(0.), overlap_at(&[], &["a"], 1));
+    }
 }
