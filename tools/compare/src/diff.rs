@@ -1,6 +1,26 @@
 use std::{collections::HashSet, hash::Hash};
 
-use crate::config::Persistence;
+use crate::{json_pointer::JsonPointer, persistence::Persistence};
+
+pub struct Comparison {
+    pub pointer: JsonPointer,
+    pub baseline_len: usize,
+    pub candidate_len: usize,
+    pub only_in_baseline: Vec<String>,
+    pub only_in_candidate: Vec<String>,
+    pub kendall_tau_a: Option<f64>,
+    // count of discordant pairs over the intersection
+    pub discordant: usize,
+    pub rbo_ext: f64,
+    // (k, overlap) for each configured top_k
+    pub overlap_at_k: Vec<(usize, usize)>,
+    // (key, baseline, candidate) for the largest score delta
+    pub worst_score: Option<(String, f64, f64)>,
+    // 1e-5
+    pub scores_over_tolerance: usize,
+}
+
+pub struct Diff(Vec<Comparison>);
 
 // c.f. https://towardsdatascience.com/rbo-v-s-kendall-tau-to-compare-ranked-lists-of-items-8776c5182899/
 /// c.f. https://github.com/changyaochen/rbo/blob/master/rbo/rbo.py
