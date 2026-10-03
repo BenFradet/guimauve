@@ -20,7 +20,7 @@ pub struct Comparison {
     pub scores_over_tolerance: usize,
 }
 
-pub struct Diff(Vec<Comparison>);
+pub struct Diff(pub Vec<Comparison>);
 
 // c.f. https://towardsdatascience.com/rbo-v-s-kendall-tau-to-compare-ranked-lists-of-items-8776c5182899/
 /// c.f. https://github.com/changyaochen/rbo/blob/master/rbo/rbo.py
