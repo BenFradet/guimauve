@@ -4,16 +4,11 @@ use anyhow::{Context, Result};
 use serde::Deserialize;
 use serde_json::Value;
 
-use crate::{diff::Diff, ordered::Ordered};
+use crate::{diff::Diff, ranking::Ranking};
 
 #[derive(Deserialize)]
 pub struct Service {
     pub url: String,
-}
-
-pub struct Ranking {
-    pub keys: Vec<String>,
-    pub scores: HashMap<String, f64>,
 }
 
 #[derive(Deserialize)]
@@ -23,7 +18,7 @@ pub struct Config {
     #[serde(default = "default_tolerance")]
     pub tolerance: f64,
     #[serde(default)]
-    pub ordered: Vec<Ordered>,
+    pub ordered: Vec<Ranking>,
 }
 
 impl Config {
