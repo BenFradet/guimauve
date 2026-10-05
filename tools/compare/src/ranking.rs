@@ -4,9 +4,11 @@ use anyhow::{Context, Result, bail};
 use serde::Deserialize;
 use serde_json::Value;
 
-use crate::{diff::Comparison, json_pointer::JsonPointer, persistence::Persistence, side::Side};
+use crate::{
+    diff::{Comparison, kendall_tau_a, overlap_at, rank_biased_overlap_ext}, json_pointer::JsonPointer, persistence::Persistence, side::Side,
+};
 
-pub struct Scored {
+struct Scored {
     pub keys: Vec<String>,
     pub scores: HashMap<String, f64>,
 }
@@ -42,7 +44,60 @@ impl Ranking {
         let only_in_baseline = Self::difference(&baseline, &candidate);
         let only_in_candidate = Self::difference(&candidate, &baseline);
 
-        todo!();
+        let ranks: HashMap<&str, usize> = baseline
+            .keys
+            .iter()
+            .filter(|k| candidate.scores.contains_key(*k))
+            .enumerate()
+            .map(|(rank, k)| (k.as_str(), rank))
+            .collect();
+
+        let permutation: Vec<usize> = candidate
+            .keys
+            .iter()
+            .filter_map(|k| ranks.get(k.as_str()).copied())
+            .collect();
+        let (kendall_tau_a, discordant) = kendall_tau_a(&permutation);
+
+        let rbo_ext = rank_biased_overlap_ext(&baseline.keys, &candidate.keys, self.persistence);
+
+        let overlap_at_k: Vec<(usize, Option<f64>)> = self
+            .top_k
+            .iter()
+            .map(|&k| (k, overlap_at(&baseline.keys, &candidate.keys, k)))
+            .collect();
+
+        let mut worst_score = None;
+        let mut scores_over_tolerance = 0;
+        for (key, &b) in &baseline.scores {
+            let Some(&c) = candidate.scores.get(key) else {
+                continue;
+            };
+            let delta = (b - c).abs();
+            if delta > tolerance {
+                scores_over_tolerance += 1;
+            }
+            if worst_score
+                .as_ref()
+                .is_none_or(|(_, wb, wc): &(String, f64, f64)| delta > (wb - wc).abs())
+            {
+                worst_score = Some((key.clone(), b, c));
+            }
+        }
+
+        Ok(Comparison {
+            pointer: self.path.clone(),
+            baseline_len: baseline.keys.len(),
+            candidate_len: candidate.keys.len(),
+            only_in_baseline,
+            only_in_candidate,
+            kendall_tau_a,
+            discordant,
+            rbo_ext,
+            overlap_at_k,
+            worst_score,
+            scores_over_tolerance,
+        })
     }
 
     fn extract(&self, value: &Value, side: Side) -> Result<Scored> {

@@ -2,7 +2,7 @@ use anyhow::{Error, Result, bail};
 use serde::Deserialize;
 use std::str::FromStr;
 
-#[derive(Debug, Deserialize, Eq, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq)]
 #[serde(try_from = "String")]
 pub struct JsonPointer(String);
 

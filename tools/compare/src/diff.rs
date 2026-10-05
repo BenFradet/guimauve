@@ -13,7 +13,7 @@ pub struct Comparison {
     pub discordant: usize,
     pub rbo_ext: f64,
     // (k, overlap) for each configured top_k
-    pub overlap_at_k: Vec<(usize, usize)>,
+    pub overlap_at_k: Vec<(usize, Option<f64>)>,
     // (key, baseline, candidate) for the largest score delta
     pub worst_score: Option<(String, f64, f64)>,
     // 1e-5
@@ -24,7 +24,7 @@ pub struct Diff(pub Vec<Comparison>);
 
 // c.f. https://towardsdatascience.com/rbo-v-s-kendall-tau-to-compare-ranked-lists-of-items-8776c5182899/
 /// c.f. https://github.com/changyaochen/rbo/blob/master/rbo/rbo.py
-fn rank_biased_overlap_ext<T: Hash + Eq>(a: &[T], b: &[T], p: Persistence) -> f64 {
+pub fn rank_biased_overlap_ext<T: Hash + Eq>(a: &[T], b: &[T], p: Persistence) -> f64 {
     if a.is_empty() && b.is_empty() {
         return 1.;
     }
@@ -87,7 +87,7 @@ fn rank_biased_overlap_ext<T: Hash + Eq>(a: &[T], b: &[T], p: Persistence) -> f6
 
 // returns tau and number of discordant
 // c.f. https://en.wikipedia.org/wiki/Kendall_rank_correlation_coefficient
-fn kendall_tau_a<T: Ord>(seq: &[T]) -> (Option<f64>, usize) {
+pub fn kendall_tau_a<T: Ord>(seq: &[T]) -> (Option<f64>, usize) {
     let n = seq.len();
     let mut discordant = 0;
     for (i, a) in seq.iter().enumerate() {
@@ -108,7 +108,7 @@ fn kendall_tau_a<T: Ord>(seq: &[T]) -> (Option<f64>, usize) {
 }
 
 // fraction of the top-k prefixes that are contained in both sequences
-fn overlap_at<T: Hash + Eq>(a: &[T], b: &[T], k: usize) -> Option<f64> {
+pub fn overlap_at<T: Hash + Eq>(a: &[T], b: &[T], k: usize) -> Option<f64> {
     let depth = k.min(a.len().max(b.len()));
     if depth == 0 {
         return None;
