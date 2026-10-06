@@ -16,11 +16,26 @@ pub struct Comparison {
     pub overlap_at_k: Vec<(usize, Option<f64>)>,
     // (key, baseline, candidate) for the largest score delta
     pub worst_score: Option<(String, f64, f64)>,
-    // 1e-5
+    // 1e-5 is the default
     pub scores_over_tolerance: usize,
 }
 
+impl Comparison {
+    // TODO: add kendall and rbo thresholds?
+    pub fn passed(&self) -> bool {
+        self.only_in_baseline.is_empty()
+            && self.only_in_candidate.is_empty()
+            && self.scores_over_tolerance == 0
+    }
+}
+
 pub struct Diff(pub Vec<Comparison>);
+
+impl Diff {
+    pub fn passed(&self) -> bool {
+        self.0.iter().all(Comparison::passed)
+    }
+}
 
 // c.f. https://towardsdatascience.com/rbo-v-s-kendall-tau-to-compare-ranked-lists-of-items-8776c5182899/
 /// c.f. https://github.com/changyaochen/rbo/blob/master/rbo/rbo.py
@@ -197,7 +212,10 @@ mod tests {
     #[test]
     fn overlap_tests() {
         assert_eq!(Some(1.), overlap_at(&["a", "b", "c"], &["b", "a", "z"], 2));
-        assert_eq!(Some(2./3.), overlap_at(&["a", "b", "c"], &["b", "a", "z"], 3));
+        assert_eq!(
+            Some(2. / 3.),
+            overlap_at(&["a", "b", "c"], &["b", "a", "z"], 3)
+        );
         assert_eq!(Some(0.), overlap_at(&["a"], &["b"], 1));
         assert_eq!(Some(0.25), overlap_at(&["a", "b", "c", "d"], &["a"], 4));
         assert_eq!(None, overlap_at::<usize>(&[], &[], 10));
