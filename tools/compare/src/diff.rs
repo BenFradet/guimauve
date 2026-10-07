@@ -1,4 +1,4 @@
-use std::{collections::HashSet, hash::Hash};
+use std::{collections::HashSet, fmt::{Display, Formatter}, hash::Hash};
 
 use crate::{json_pointer::JsonPointer, persistence::Persistence};
 
@@ -27,6 +27,61 @@ impl Comparison {
             && self.only_in_candidate.is_empty()
             && self.scores_over_tolerance == 0
     }
+}
+
+impl Display for Comparison {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        writeln!(
+            f,
+            "{}: baline {} items, candidate {} items",
+            self.pointer.as_str(),
+            self.baseline_len,
+            self.candidate_len,
+        )?;
+        writeln!(f, "  rbo_ex {:.4}", self.rbo_ext)?;
+
+        match self.kendall_tau_a {
+            Some(tau) => writeln!(
+                f,
+                "  kendall_tau_a {tau:.4} ({} discordant)",
+                self.discordant
+            )?,
+            None => writeln!(f, "  kendall_tau_a n/a")?,
+        }
+
+        for (k, overlap) in &self.overlap_at_k {
+            match overlap {
+                Some(o) => writeln!(f, "  overlap@{k} {o:.4}")?,
+                None => writeln!(f, "  overlap@{k} n/a (both sides empty)")?,
+            }
+        }
+
+        writeln!(f, "  scores over tolerance: {}", self.scores_over_tolerance)?;
+        if let Some((key, baseline, candidate)) = &self.worst_score {
+            writeln!(
+                f,
+                "  worst score: {key} baseline {baseline} candidate {candidate} (delta {:e})",
+                (baseline - candidate).abs()
+            )?;
+        }
+
+        keys(f, "only in baseline", &self.only_in_baseline)?;
+        keys(f, "only in candidate", &self.only_in_candidate)
+    }
+}
+
+const MAX_KEYS: usize = 20;
+
+fn keys(f: &mut Formatter<'_>, label: &str, keys: &[String]) -> std::fmt::Result {
+    if keys.is_empty() {
+        return writeln!(f, "  {label}: none");
+    }
+    let shown = keys.len().min(MAX_KEYS);
+    writeln!(f, "  {label} ({}): {}", keys.len(), keys[..shown].join(", "))?;
+    if keys.len() > shown {
+        writeln!(f, "    and {} more", keys.len() - shown)?;
+    }
+    Ok(())
 }
 
 pub struct Diff(pub Vec<Comparison>);
