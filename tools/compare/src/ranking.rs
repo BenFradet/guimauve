@@ -5,7 +5,10 @@ use serde::Deserialize;
 use serde_json::Value;
 
 use crate::{
-    diff::{Comparison, kendall_tau_a, overlap_at, rank_biased_overlap_ext}, json_pointer::JsonPointer, persistence::Persistence, side::Side,
+    diff::{Comparison, kendall_tau_a, overlap_at, rank_biased_overlap_ext},
+    json_pointer::JsonPointer,
+    persistence::Persistence,
+    side::Side,
 };
 
 struct Scored {
@@ -105,7 +108,7 @@ impl Ranking {
         let items = value.as_array().with_context(|| {
             format!(
                 "{side} {path} is a {}, expected an array",
-                type_name_of_val(value)
+                Self::kind(value),
             )
         })?;
 
@@ -138,5 +141,16 @@ impl Ranking {
             .collect();
         keys.sort();
         keys
+    }
+
+    fn kind(value: &Value) -> &'static str {
+        match value {
+            Value::Null => "null",
+            Value::Bool(_) => "bool",
+            Value::Number(_) => "number",
+            Value::String(_) => "string",
+            Value::Array(_) => "array",
+            Value::Object(_) => "object",
+        }
     }
 }
