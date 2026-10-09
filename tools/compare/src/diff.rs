@@ -92,6 +92,15 @@ impl Diff {
     }
 }
 
+impl Display for Diff {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        for comparison in &self.0 {
+            writeln!(f, "{comparison}")?;
+        }
+        Ok(())
+    }
+}
+
 // c.f. https://towardsdatascience.com/rbo-v-s-kendall-tau-to-compare-ranked-lists-of-items-8776c5182899/
 /// c.f. https://github.com/changyaochen/rbo/blob/master/rbo/rbo.py
 pub fn rank_biased_overlap_ext<T: Hash + Eq>(a: &[T], b: &[T], p: Persistence) -> f64 {

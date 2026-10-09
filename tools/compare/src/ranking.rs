@@ -1,4 +1,4 @@
-use std::{any::type_name_of_val, collections::HashMap};
+use std::collections::HashMap;
 
 use anyhow::{Context, Result, bail};
 use serde::Deserialize;
@@ -72,7 +72,10 @@ impl Ranking {
 
         let mut worst_score = None;
         let mut scores_over_tolerance = 0;
-        for (key, &b) in &baseline.scores {
+        for key in &baseline.keys {
+            let Some(&b) = baseline.scores.get(key) else {
+                continue;
+            };
             let Some(&c) = candidate.scores.get(key) else {
                 continue;
             };

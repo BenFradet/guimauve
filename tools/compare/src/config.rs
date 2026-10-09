@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fs, path::Path};
+use std::{fs, path::Path};
 
 use anyhow::{Context, Result};
 use serde::Deserialize;
@@ -18,25 +18,25 @@ pub struct Config {
     #[serde(default = "default_tolerance")]
     pub tolerance: f64,
     #[serde(default)]
-    pub ordered: Vec<Ranking>,
+    pub rankings: Vec<Ranking>,
 }
 
 impl Config {
     pub fn compare(&self, baseline: &Value, candidate: &Value) -> Result<Diff> {
-        let mut comparisons = Vec::with_capacity(self.ordered.len());
-        for spec in &self.ordered {
+        let mut comparisons = Vec::with_capacity(self.rankings.len());
+        for spec in &self.rankings {
             comparisons.push(spec.compare(baseline, candidate, self.tolerance)?);
         }
         Ok(Diff(comparisons))
+    }
+
+    pub fn load(path: &Path) -> Result<Config> {
+        let text = fs::read_to_string(path)
+            .with_context(|| format!("reading config at {}", path.display()))?;
+        toml::from_str(&text).with_context(|| format!("parsing config at {}", path.display()))
     }
 }
 
 fn default_tolerance() -> f64 {
     1e-5
-}
-
-pub fn load(path: &Path) -> Result<Config> {
-    let text = fs::read_to_string(path)
-        .with_context(|| format!("reading config at {}", path.display()))?;
-    toml::from_str(&text).with_context(|| format!("parsing config at {}", path.display()))
 }
